@@ -57,6 +57,13 @@ It also offers job matching based on skills, experience, salary, and location pr
 5. Receive improvement suggestions
 6. Find suitable job matches
 
+## 📌 Project Status
+
+🚧 **Currently in Development**
+
+ResuMate AI is actively being developed. 
+New features, improvements, and integrations will be added progressively.
+
 ## 👥 Team
 
 Developed as a collaborative project.
