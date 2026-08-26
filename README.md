@@ -25,17 +25,17 @@ It also offers job matching based on skills, experience, salary, and location pr
 
 ## ✨ Features
 
-- 📄 AI Resume Analysis
-- 🎯 ATS Compatibility Score
-- 🧠 Skill Gap Detection
-- 🔍 Keyword Analysis
-- 💡 Personalized Suggestions
-- 💼 Job Matching
-- 📍 Location Preferences
-- 💰 Salary Matching
-- 📊 Interactive Dashboard
-- 🤖 AI Support Chatbot
-- 📈 Progress Tracking
+| 📄 Resume Analysis | 🎯 ATS Compatibility | 🧠 Skill Gap Detection |
+|---|---|---|
+| AI-powered resume evaluation | ATS scoring & optimization | Identify missing skills |
+
+| 🔍 Keyword Analysis | 💼 Job Matching | 📍 Location Preferences |
+|---|---|---|
+| Find important keywords | Match suitable opportunities | Personalized location matching |
+
+| 💰 Salary Matching | 📊 Interactive Dashboard | 🤖 AI Support Chatbot |
+|---|---|---|
+| Match salary expectations | Visual resume insights | Get instant assistance |
 
 ## 🛠️ Tech Stack
 
