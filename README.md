@@ -66,9 +66,12 @@ New features, improvements, and integrations will be added progressively.
 
 ## 👥 Team
 
-Developed as a collaborative project.
+This project is developed collaboratively by our team.
 
----
+| Member | Role |
+|---|---|
+| **Mansi Rawat** | Backend Developer |
+| **Bhumika Bisht** | frontend Developer |
 
 <p align="center">
   ⭐ If you find ResuMate AI useful, consider giving it a star!
