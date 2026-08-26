@@ -81,6 +81,7 @@ This project is developed collaboratively by our team.
 |---|---|
 | **Mansi Rawat** | Backend Developer |
 | **Bhumika Bisht** | frontend Developer |
+| **Mehak Joshi** | Database Engineer |
 
 <p align="center">
   ⭐ If you find ResuMate AI useful, consider giving it a star!
