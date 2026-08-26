@@ -64,6 +64,15 @@ It also offers job matching based on skills, experience, salary, and location pr
 ResuMate AI is actively being developed. 
 New features, improvements, and integrations will be added progressively.
 
+## 🔮 Future Scope
+
+- 🤖 Advanced AI career recommendations
+- 🎤 AI-powered interview preparation
+- 🔔 Personalized job alerts
+- 📈 Career growth tracking
+- 🌍 Multi-language resume analysis
+- 💼 Real-time job market integration
+
 ## 👥 Team
 
 This project is developed collaboratively by our team.
