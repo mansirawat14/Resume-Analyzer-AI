@@ -1,1 +1,16 @@
+Flask
+Flask-CORS
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-JWT-Extended
 
+python-dotenv
+
+pypdf
+python-docx
+
+openai
+
+psycopg[binary]
+
+gunicorn
