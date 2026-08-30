@@ -13,7 +13,7 @@ This folder contains the frontend of **Resume-Analyzer-AI**.
 
 ##Project Structure
 
-*text
+```text
 frontend/
 │
 ├── index.html
