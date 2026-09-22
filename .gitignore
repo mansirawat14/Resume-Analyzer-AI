@@ -9,6 +9,9 @@ __pycache__/
 # IDE
 .vscode/
 
+# User uploads
+uploads/
+
 # OS files
 .DS_Store
 Thumbs.db
