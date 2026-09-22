@@ -1,4 +1,8 @@
-from flask import Blueprint, request, jsonify
+import os
+
+from flask import Blueprint, request, jsonify, current_app
+from utils.file_handler import save_resume
+from services.resume_parser import extract_resume_text
 
 
 resume_bp = Blueprint(
@@ -25,8 +29,21 @@ def upload_resume():
             "message": "No file selected."
         }), 400
 
+    filename = save_resume(
+        file,
+        current_app.config["UPLOAD_FOLDER"]
+    )
+
+    file_path = os.path.join(
+        current_app.config["UPLOAD_FOLDER"],
+        filename
+    )
+
+    resume_text = extract_resume_text(file_path)
+
     return jsonify({
         "success": True,
-        "message": "Resume received successfully!",
-        "filename": file.filename
+        "message": "Resume uploaded and text extracted successfully!",
+        "filename": filename,
+        "text_length": len(resume_text)
     }), 200

@@ -21,3 +21,10 @@ class Config:
         "docx",
         "txt"
     }
+     # MySQL database configuration
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL",
+        "mysql+pymysql://root:mansi14@localhost/resumate_db"
+    )
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
