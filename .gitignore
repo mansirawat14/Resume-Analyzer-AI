@@ -8,6 +8,7 @@ __pycache__/
 
 # IDE
 .vscode/
+*.code-workspace
 
 # User uploads
 uploads/
