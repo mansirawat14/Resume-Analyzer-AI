@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="banner.png.jpeg" width="100%">
+  <img src="assets/banner.png" alt="Resumate Banner">
 </p>
 
 <h1 align="center">🤖 ResuMate AI</h1>
