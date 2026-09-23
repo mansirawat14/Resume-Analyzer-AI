@@ -2192,6 +2192,474 @@ def calculate_ats_score(resume_data):
     )
 
 # ============================================================
+# JOB MATCH / SKILLS MATCH
+# ============================================================
+
+def calculate_job_match(resume_data, job_description):
+    """
+    Compare resume skills with skills required in the job description.
+
+    Returns:
+    - match percentage
+    - matched skills
+    - missing skills
+    - required skills
+    """
+
+    if not job_description:
+        return {
+            "match_percentage": None,
+            "matched_skills": [],
+            "missing_skills": [],
+            "required_skills": []
+        }
+
+    # --------------------------------------------------------
+    # Resume skills
+    # --------------------------------------------------------
+
+    resume_skills = set(
+        skill.lower()
+        for skill in resume_data.get(
+            "technical_skills",
+            {}
+        ).get(
+            "all",
+            []
+        )
+    )
+
+    # --------------------------------------------------------
+    # Skills mentioned in Job Description
+    # --------------------------------------------------------
+
+    job_skills_data = extract_skills(
+        job_description
+    )
+
+    job_skills = set(
+        skill.lower()
+        for skill in job_skills_data.get(
+            "all",
+            []
+        )
+    )
+
+    # --------------------------------------------------------
+    # Matched and missing skills
+    # --------------------------------------------------------
+
+    matched_skills = sorted(
+        resume_skills.intersection(
+            job_skills
+        )
+    )
+
+    missing_skills = sorted(
+        job_skills.difference(
+            resume_skills
+        )
+    )
+
+    # --------------------------------------------------------
+    # Calculate percentage
+    # --------------------------------------------------------
+
+    if job_skills:
+        match_percentage = round(
+            (
+                len(matched_skills)
+                /
+                len(job_skills)
+            ) * 100,
+            2
+        )
+    else:
+        match_percentage = 0
+
+    return {
+        "match_percentage": match_percentage,
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+        "required_skills": sorted(job_skills)
+    }
+
+# ============================================================
+# RESUME ISSUES ANALYSIS
+# ============================================================
+
+def calculate_resume_issues(
+    resume_data,
+    job_match=None
+):
+    """
+    Detect potential issues in the resume.
+
+    Returns:
+    - total number of issues
+    - detailed issue list
+    """
+
+    issues = []
+
+    # --------------------------------------------------------
+    # 1. Contact Information
+    # --------------------------------------------------------
+
+    contact = resume_data.get(
+        "contact_information",
+        {}
+    )
+
+    if not contact.get("email"):
+        issues.append({
+            "section": "Contact Information",
+            "issue": "Email address is missing.",
+            "severity": "High"
+        })
+
+    if not contact.get("phone"):
+        issues.append({
+            "section": "Contact Information",
+            "issue": "Phone number is missing.",
+            "severity": "Medium"
+        })
+
+    if not contact.get("linkedin"):
+        issues.append({
+            "section": "Contact Information",
+            "issue": "LinkedIn profile is missing.",
+            "severity": "Low"
+        })
+
+    if not contact.get("github"):
+        issues.append({
+            "section": "Contact Information",
+            "issue": "GitHub profile is missing.",
+            "severity": "Low"
+        })
+
+    # --------------------------------------------------------
+    # 2. Professional Summary
+    # --------------------------------------------------------
+
+    summary = resume_data.get(
+        "professional_summary",
+        {}
+    )
+
+    if not summary.get("summary"):
+        issues.append({
+            "section": "Professional Summary",
+            "issue": "Professional summary is missing.",
+            "severity": "High"
+        })
+
+    elif summary.get("quality") == "Needs Improvement":
+        issues.append({
+            "section": "Professional Summary",
+            "issue": "Professional summary is too short and could be more detailed.",
+            "severity": "Medium"
+        })
+
+    # --------------------------------------------------------
+    # 3. Education
+    # --------------------------------------------------------
+
+    if not resume_data.get("education"):
+        issues.append({
+            "section": "Education",
+            "issue": "Education details are missing.",
+            "severity": "High"
+        })
+
+    # --------------------------------------------------------
+    # 4. Technical Skills
+    # --------------------------------------------------------
+
+    skills = resume_data.get(
+        "technical_skills",
+        {}
+    )
+
+    total_skills = 0
+
+    for key in [
+        "programming_languages",
+        "frameworks",
+        "libraries",
+        "databases",
+        "tools_and_technologies"
+    ]:
+        total_skills += len(
+            skills.get(key, [])
+        )
+
+    if total_skills == 0:
+        issues.append({
+            "section": "Technical Skills",
+            "issue": "No technical skills were detected.",
+            "severity": "High"
+        })
+
+    elif total_skills < 3:
+        issues.append({
+            "section": "Technical Skills",
+            "issue": "Very few technical skills were detected.",
+            "severity": "Medium"
+        })
+
+    # --------------------------------------------------------
+    # 5. Work Experience / Internships
+    # --------------------------------------------------------
+
+    work_experience = resume_data.get(
+        "work_experience",
+        []
+    )
+
+    internships = resume_data.get(
+        "internships",
+        []
+    )
+
+    if not work_experience and not internships:
+        issues.append({
+            "section": "Experience",
+            "issue": "No work experience or internship experience was detected.",
+            "severity": "Medium"
+        })
+
+    # --------------------------------------------------------
+    # 6. Projects
+    # --------------------------------------------------------
+
+    projects = resume_data.get(
+        "projects",
+        []
+    )
+
+    if not projects:
+        issues.append({
+            "section": "Projects",
+            "issue": "No projects were detected.",
+            "severity": "Medium"
+        })
+
+    # --------------------------------------------------------
+    # 7. Certifications
+    # --------------------------------------------------------
+
+    certifications = resume_data.get(
+        "certifications",
+        []
+    )
+
+    if not certifications:
+        issues.append({
+            "section": "Certifications",
+            "issue": "No certifications were detected.",
+            "severity": "Low"
+        })
+
+    # --------------------------------------------------------
+    # 8. Achievements
+    # --------------------------------------------------------
+
+    achievements = resume_data.get(
+        "achievements",
+        []
+    )
+
+    if not achievements:
+        issues.append({
+            "section": "Achievements",
+            "issue": "No achievements were detected.",
+            "severity": "Low"
+        })
+
+    # --------------------------------------------------------
+    # 9. Job Match / Missing Skills
+    # --------------------------------------------------------
+
+    if job_match:
+
+        missing_skills = job_match.get(
+            "missing_skills",
+            []
+        )
+
+        for skill in missing_skills:
+            issues.append({
+                "section": "Job Match",
+                "issue": f"Resume does not mention the required skill: {skill}.",
+                "severity": "Medium"
+            })
+
+    # --------------------------------------------------------
+    # Final result
+    # --------------------------------------------------------
+
+    return {
+        "count": len(issues),
+        "issues": issues
+    }
+
+# ============================================================
+# RESUME STRENGTHS ANALYSIS
+# ============================================================
+
+def calculate_resume_strengths(
+    resume_data,
+    job_match=None
+):
+    """
+    Identify the strongest aspects of a resume.
+    """
+
+    strengths = []
+
+    # --------------------------------------------------------
+    # 1. Technical Skills
+    # --------------------------------------------------------
+
+    skills = resume_data.get(
+        "technical_skills",
+        {}
+    )
+
+    total_skills = 0
+
+    for key in [
+        "programming_languages",
+        "frameworks",
+        "libraries",
+        "databases",
+        "tools_and_technologies"
+    ]:
+        total_skills += len(
+            skills.get(key, [])
+        )
+
+    if total_skills >= 5:
+        strengths.append({
+            "strength": "Strong technical skills",
+            "description": (
+                "Resume contains a broad range of "
+                "programming languages, frameworks, "
+                "libraries, databases, and tools."
+            )
+        })
+
+    # --------------------------------------------------------
+    # 2. Work Experience
+    # --------------------------------------------------------
+
+    if resume_data.get("work_experience"):
+        strengths.append({
+            "strength": "Relevant work experience",
+            "description": (
+                "Resume includes practical work "
+                "experience related to software development."
+            )
+        })
+
+    # --------------------------------------------------------
+    # 3. Internships
+    # --------------------------------------------------------
+
+    if resume_data.get("internships"):
+        strengths.append({
+            "strength": "Practical internship experience",
+            "description": (
+                "Resume demonstrates practical experience "
+                "through internship work."
+            )
+        })
+
+    # --------------------------------------------------------
+    # 4. Projects
+    # --------------------------------------------------------
+
+    projects = resume_data.get(
+        "projects",
+        []
+    )
+
+    if len(projects) >= 2:
+        strengths.append({
+            "strength": "Strong project portfolio",
+            "description": (
+                "Resume contains multiple technical "
+                "projects demonstrating practical "
+                "development experience."
+            )
+        })
+
+    elif projects:
+        strengths.append({
+            "strength": "Project experience",
+            "description": (
+                "Resume includes technical project work."
+            )
+        })
+
+    # --------------------------------------------------------
+    # 5. Certifications
+    # --------------------------------------------------------
+
+    if resume_data.get("certifications"):
+        strengths.append({
+            "strength": "Professional certifications",
+            "description": (
+                "Resume includes relevant technical "
+                "certifications."
+            )
+        })
+
+    # --------------------------------------------------------
+    # 6. Achievements
+    # --------------------------------------------------------
+
+    if resume_data.get("achievements"):
+        strengths.append({
+            "strength": "Documented achievements",
+            "description": (
+                "Resume includes competitions, hackathons, "
+                "scholarships, or other achievements."
+            )
+        })
+
+    # --------------------------------------------------------
+    # 7. Job Match
+    # --------------------------------------------------------
+
+    if job_match:
+
+        match_percentage = job_match.get(
+            "match_percentage"
+        )
+
+        if (
+            match_percentage is not None
+            and match_percentage >= 70
+        ):
+            strengths.append({
+                "strength": "Strong job skill alignment",
+                "description": (
+                    f"Resume matches "
+                    f"{match_percentage}% of the "
+                    "skills identified in the job description."
+                )
+            })
+
+    # --------------------------------------------------------
+    # Limit displayed strengths
+    # --------------------------------------------------------
+
+    return strengths[:5]
+
+# ============================================================
 # SUMMARY ANALYSIS
 # ============================================================
 
@@ -2325,169 +2793,357 @@ def analyze_resume(
     summary["relevance"] = relevance
 
     # ========================================================
-    # 5. BUILD FINAL RESULT
+    # 5. JOB MATCH
     # ========================================================
 
-    result = {
-
-        "success": True,
-
-        # ====================================================
-        # 1. CONTACT INFORMATION
-        # ====================================================
-
-        "contact_information": {
-
-            "name":
-                extract_name(
-                    text
-                ),
-
-            "email":
-                extract_email(
-                    text
-                ),
-
-            "phone":
-                extract_phone(
-                    text
-                ),
-
-            "linkedin":
-                extract_linkedin(
-                    text
-                ),
-
-            "github":
-                extract_github(
-                    text
-                )
+    job_match = calculate_job_match(
+        {
+            "technical_skills": skills
         },
+        job_description
+    )
 
-        # ====================================================
-        # 2. PROFESSIONAL SUMMARY
-        # ====================================================
+    resume_strengths = calculate_resume_strengths(
+    {
+        "technical_skills": skills,
+        "work_experience": extract_experience(
+            sections.get("experience", "")
+        ),
+        "internships": extract_internships(
+            sections.get("internships", "")
+        ),
+        "projects": extract_projects(
+            sections.get("projects", "")
+        ),
+        "certifications": extract_certifications(
+            sections.get("certifications", "")
+        ),
+        "achievements": extract_achievements(
+            sections.get("achievements", "")
+        )
+    },
+    job_match
+)
 
-        "professional_summary":
-            summary,
+    # ========================================================
+    # 5.5 RESUME ISSUES
+    # ========================================================
 
-        # ====================================================
-        # 3. EDUCATION
-        # ====================================================
+    resume_issues = calculate_resume_issues(
+        {
+            "contact_information": {
+                "email": extract_email(text),
+                "phone": extract_phone(text),
+                "linkedin": extract_linkedin(text),
+                "github": extract_github(text)
+            },
 
-        "education":
-            extract_education(
+            "professional_summary": summary,
+
+            "education": extract_education(
                 sections.get(
                     "education",
                     ""
                 )
             ),
 
-        # ====================================================
-        # 4. TECHNICAL SKILLS
-        # ====================================================
+            "technical_skills": {
+                "programming_languages":
+                    skills.get(
+                        "programming_languages",
+                        []
+                    ),
 
-        "technical_skills": {
+                "frameworks":
+                    skills.get(
+                        "frameworks",
+                        []
+                    ),
 
-            "programming_languages":
-                skills.get(
-                    "programming_languages",
-                    []
-                ),
+                "libraries":
+                    skills.get(
+                        "libraries",
+                        []
+                    ),
 
-            "frameworks":
-                skills.get(
-                    "frameworks",
-                    []
-                ),
+                "databases":
+                    skills.get(
+                        "databases",
+                        []
+                    ),
 
-            "libraries":
-                skills.get(
-                    "libraries",
-                    []
-                ),
+                "tools_and_technologies":
+                    skills.get(
+                        "tools_and_technologies",
+                        []
+                    )
+            },
 
-            "databases":
-                skills.get(
-                    "databases",
-                    []
-                ),
-
-            "tools_and_technologies":
-                skills.get(
-                    "tools_and_technologies",
-                    []
-                ),
-
-            "relevant_keywords":
-                extract_keywords(
+            "work_experience":
+                extract_experience(
                     sections.get(
-                        "skills",
+                        "experience",
+                        ""
+                    )
+                ),
+
+            "internships":
+                extract_internships(
+                    sections.get(
+                        "internships",
+                        ""
+                    )
+                ),
+
+            "projects":
+                extract_projects(
+                    sections.get(
+                        "projects",
+                        ""
+                    )
+                ),
+
+            "certifications":
+                extract_certifications(
+                    sections.get(
+                        "certifications",
+                        ""
+                    )
+                ),
+
+            "achievements":
+                extract_achievements(
+                    sections.get(
+                        "achievements",
                         ""
                     )
                 )
         },
+        job_match
+    )
 
-        # ====================================================
-        # 5. WORK EXPERIENCE
-        # ====================================================
+        # ========================================================
+    # 5.6 RESUME STRENGTHS
+    # ========================================================
 
-        "work_experience":
-            extract_experience(
-                sections.get(
-                    "experience",
-                    ""
+    resume_strengths = calculate_resume_strengths(
+        {
+            "technical_skills": skills,
+
+            "work_experience":
+                extract_experience(
+                    sections.get(
+                        "experience",
+                        ""
+                    )
+                ),
+
+            "internships":
+                extract_internships(
+                    sections.get(
+                        "internships",
+                        ""
+                    )
+                ),
+
+            "projects":
+                extract_projects(
+                    sections.get(
+                        "projects",
+                        ""
+                    )
+                ),
+
+            "certifications":
+                extract_certifications(
+                    sections.get(
+                        "certifications",
+                        ""
+                    )
+                ),
+
+            "achievements":
+                extract_achievements(
+                    sections.get(
+                        "achievements",
+                        ""
+                    )
                 )
-            ),
+        },
+        job_match
+    )
 
-        # ====================================================
-        # 6. INTERNSHIPS
-        # ====================================================
+    # ========================================================
+    # 6. BUILD FINAL RESULT
+    # ========================================================
 
-        "internships":
-            extract_internships(
-                sections.get(
-                    "internships",
-                    ""
+    result = {
+        "success": True,
+
+        "job_match": job_match,
+
+        "issues_found": resume_issues["count"],
+
+        "issues": resume_issues["issues"],
+
+        "top_strengths": resume_strengths,
+
+            # ====================================================
+            # 1. CONTACT INFORMATION
+            # ====================================================
+
+            "contact_information": {
+
+                "name":
+                    extract_name(
+                        text
+                    ),
+
+                "email":
+                    extract_email(
+                        text
+                    ),
+
+                "phone":
+                    extract_phone(
+                        text
+                    ),
+
+                "linkedin":
+                    extract_linkedin(
+                        text
+                    ),
+
+                "github":
+                    extract_github(
+                        text
+                    )
+            },
+
+            # ====================================================
+            # 2. PROFESSIONAL SUMMARY
+            # ====================================================
+
+            "professional_summary":
+                summary,
+
+            # ====================================================
+            # 3. EDUCATION
+            # ====================================================
+
+            "education":
+                extract_education(
+                    sections.get(
+                        "education",
+                        ""
+                    )
+                ),
+
+            # ====================================================
+            # 4. TECHNICAL SKILLS
+            # ====================================================
+
+            "technical_skills": {
+
+                "programming_languages":
+                    skills.get(
+                        "programming_languages",
+                        []
+                    ),
+
+                "frameworks":
+                    skills.get(
+                        "frameworks",
+                        []
+                    ),
+
+                "libraries":
+                    skills.get(
+                        "libraries",
+                        []
+                    ),
+
+                "databases":
+                    skills.get(
+                        "databases",
+                        []
+                    ),
+
+                "tools_and_technologies":
+                    skills.get(
+                        "tools_and_technologies",
+                        []
+                    ),
+
+                "relevant_keywords":
+                    extract_keywords(
+                        sections.get(
+                            "skills",
+                            ""
+                        )
+                    )
+            },
+
+            # ====================================================
+            # 5. WORK EXPERIENCE
+            # ====================================================
+
+            "work_experience":
+                extract_experience(
+                    sections.get(
+                        "experience",
+                        ""
+                    )
+                ),
+
+            # ====================================================
+            # 6. INTERNSHIPS
+            # ====================================================
+
+            "internships":
+                extract_internships(
+                    sections.get(
+                        "internships",
+                        ""
+                    )
+                ),
+
+            # ====================================================
+            # 7. PROJECTS
+            # ====================================================
+
+            "projects":
+                extract_projects(
+                    sections.get(
+                        "projects",
+                        ""
+                    )
+                ),
+
+            # ====================================================
+            # 8. CERTIFICATIONS
+            # ====================================================
+
+            "certifications":
+                extract_certifications(
+                    sections.get(
+                        "certifications",
+                        ""
+                    )
+                ),
+
+            # ====================================================
+            # 9. ACHIEVEMENTS
+            # ====================================================
+
+            "achievements":
+                extract_achievements(
+                    sections.get(
+                        "achievements",
+                        ""
+                    )
                 )
-            ),
-
-        # ====================================================
-        # 7. PROJECTS
-        # ====================================================
-
-        "projects":
-            extract_projects(
-                sections.get(
-                    "projects",
-                    ""
-                )
-            ),
-
-        # ====================================================
-        # 8. CERTIFICATIONS
-        # ====================================================
-
-        "certifications":
-            extract_certifications(
-                sections.get(
-                    "certifications",
-                    ""
-                )
-            ),
-
-        # ====================================================
-        # 9. ACHIEVEMENTS
-        # ====================================================
-
-        "achievements":
-            extract_achievements(
-                sections.get(
-                    "achievements",
-                    ""
-                )
-            )
-    }
+        }
 
     # ========================================================
     # 6. CALCULATE RESUME SCORE

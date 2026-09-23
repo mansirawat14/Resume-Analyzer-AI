@@ -54,24 +54,34 @@ def upload_resume():
 
     # Extract text
     try:
-
         text = extract_resume_text(
             file_path
         )
 
     except Exception as e:
-
         return jsonify({
             "success": False,
             "message": "Could not extract resume text.",
             "error": str(e)
         }), 500
 
-    # Analyze resume
+    # ========================================================
+    # ANALYZE RESUME
+    # ========================================================
+
     try:
 
+        # Optional job description
+        job_description = request.form.get(
+            "job_description",
+            ""
+        ).strip()
+
         analysis = analyze_resume(
-            text
+            text,
+            job_description=job_description
+            if job_description
+            else None
         )
 
     except Exception as e:
