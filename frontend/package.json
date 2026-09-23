@@ -1,0 +1,20 @@
+{
+  "name": "resumate-ai",
+  "version": "1.0.0",
+  "description": "RESUMATE AI - AI-Powered Resume Analyzer with Light & Dark Mode",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "serve": "npx serve .",
+    "dev": "npx vite"
+  },
+  "keywords": [
+    "resume-analyzer",
+    "ai-resume",
+    "dark-mode",
+    "light-mode",
+    "resumate"
+  ],
+  "author": "Rahul Sharma",
+  "license": "MIT"
+}
