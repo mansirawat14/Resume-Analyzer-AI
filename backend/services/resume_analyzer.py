@@ -733,80 +733,227 @@ def extract_education(text):
         if clean_line(line)
     ]
 
-    entries = []
+    education = []
 
-    degree_pattern = re.compile(
-        r"\b("
-        r"BCA|B\.?Tech|BTech|B\.?E|"
-        r"MCA|M\.?Tech|MBA|"
-        r"B\.?Sc|M\.?Sc|"
-        r"Bachelor|Master|PhD|"
-        r"Diploma|10th|12th"
-        r")\b",
+    date_pattern = re.compile(
+        r"\b(?:19|20)\d{2}\s*[-–—]\s*(?:19|20)\d{2}\b"
+        r"|\b(?:19|20)\d{2}\b",
         re.IGNORECASE
     )
 
-    for index, line in enumerate(lines):
+    cgpa_pattern = re.compile(
+        r"(?:CGPA|GPA)"
+        r"\s*[:\-]?\s*[\d.]+"
+        r"(?:\s*/\s*[\d.]+)?",
+        re.IGNORECASE
+    )
 
-        if not degree_pattern.search(line):
+    percentage_pattern = re.compile(
+        r"(?:Percentage|Percent)"
+        r"\s*[:\-]?\s*[\d.]+\s*%?",
+        re.IGNORECASE
+    )
+
+    degree_keywords = [
+        "bca",
+        "bachelor",
+        "b.tech",
+        "btech",
+        "b.e",
+        "be ",
+        "mca",
+        "master",
+        "m.tech",
+        "mtech",
+        "mba",
+        "b.sc",
+        "bsc",
+        "m.sc",
+        "msc",
+        "b.com",
+        "bcom",
+        "m.com",
+        "mcom",
+        "phd",
+        "diploma"
+    ]
+
+    index = 0
+
+    while index < len(lines):
+
+        line = lines[index]
+
+        lower = line.lower()
+
+        # --------------------------------------------------
+        # Find degree
+        # --------------------------------------------------
+
+        is_degree = any(
+            keyword in lower
+            for keyword in degree_keywords
+        )
+
+        if not is_degree:
+            index += 1
             continue
 
-        dates = extract_dates(line)
+        # --------------------------------------------------
+        # DEGREE
+        # --------------------------------------------------
 
-        cgpa = extract_percentage_or_cgpa(
+        degree = date_pattern.sub(
+            "",
             line
         )
 
-        # -------------------------------------------------
-        # Find university / college from next lines
-        # -------------------------------------------------
+        degree = cgpa_pattern.sub(
+            "",
+            degree
+        )
 
-        college = None
+        degree = percentage_pattern.sub(
+            "",
+            degree
+        )
 
-        for next_line in lines[
-            index + 1:index + 3
-        ]:
+        degree = re.sub(
+            r"\s+",
+            " ",
+            degree
+        ).strip()
 
-            lower = next_line.lower()
+        # --------------------------------------------------
+        # DATES
+        # --------------------------------------------------
 
+        dates = date_pattern.findall(line)
+
+        # --------------------------------------------------
+        # COLLEGE / UNIVERSITY
+        # --------------------------------------------------
+
+        college_university = None
+
+        # Look at the next few lines
+        for j in range(
+            index + 1,
+            min(index + 4, len(lines))
+        ):
+
+            nearby = lines[j]
+
+            nearby_lower = nearby.lower()
+
+            # Skip another degree
             if any(
-                keyword in lower
-                for keyword in [
-                    "university",
-                    "college",
-                    "school",
-                    "institute"
-                ]
+                keyword in nearby_lower
+                for keyword in degree_keywords
             ):
-                college = next_line
                 break
 
-        # Sometimes CGPA is on the college line
-        if college:
-
-            if not cgpa:
-                cgpa = extract_percentage_or_cgpa(
-                    college
-                )
-
-            college = re.sub(
-                r"\s*(?:cgpa|gpa)\s*[:\-]?"
-                r"\s*\d+(?:\.\d+)?"
-                r"(?:\s*/\s*\d+)?",
+            # Remove CGPA / percentage from the line
+            college_candidate = cgpa_pattern.sub(
                 "",
-                college,
-                flags=re.IGNORECASE
+                nearby
+            )
+
+            college_candidate = percentage_pattern.sub(
+                "",
+                college_candidate
+            )
+
+            # Remove dates
+            college_candidate = date_pattern.sub(
+                "",
+                college_candidate
+            )
+
+            college_candidate = re.sub(
+                r"\s+",
+                " ",
+                college_candidate
             ).strip()
 
-        entries.append({
-            "degree": line,
-            "college_university": college,
-            "cgpa_percentage": cgpa,
-            "dates": dates
+            if college_candidate:
+
+                college_university = (
+                    college_candidate
+                )
+
+                break
+
+        # --------------------------------------------------
+        # CGPA / PERCENTAGE
+        # --------------------------------------------------
+
+        cgpa_percentage = None
+
+        # Search current + nearby lines
+        for j in range(
+            index,
+            min(index + 4, len(lines))
+        ):
+
+            nearby = lines[j]
+
+            cgpa_match = cgpa_pattern.search(
+                nearby
+            )
+
+            if cgpa_match:
+
+                cgpa_percentage = (
+                    cgpa_match.group(0)
+                )
+
+                break
+
+            percentage_match = (
+                percentage_pattern.search(
+                    nearby
+                )
+            )
+
+            if percentage_match:
+
+                cgpa_percentage = (
+                    percentage_match.group(0)
+                )
+
+                break
+
+        # --------------------------------------------------
+        # Remove duplicate dates
+        # --------------------------------------------------
+
+        dates = list(
+            dict.fromkeys(dates)
+        )
+
+        # --------------------------------------------------
+        # SAVE EDUCATION
+        # --------------------------------------------------
+
+        education.append({
+
+            "degree": degree or None,
+
+            "college_university":
+                college_university,
+
+            "cgpa_percentage":
+                cgpa_percentage,
+
+            "dates":
+                dates
+
         })
 
-    return entries
+        index += 1
 
+    return education
 
 # =========================================================
 # WORK EXPERIENCE
@@ -1048,74 +1195,185 @@ def extract_internships(text):
         if clean_line(line)
     ]
 
-    entries = []
+    internships = []
 
-    for index, line in enumerate(lines):
+    # Matches:
+    # Jan 2026 – Mar 2026
+    # May 2026 - Jul 2026
+    # 2025 - 2026
+    # 2026
+    date_pattern = re.compile(
+        r"(?:"
+        r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+        r"\s+\d{4}"
+        r"\s*[-–—]\s*"
+        r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+        r"\s+\d{4}"
+        r"|"
+        r"\b(?:19|20)\d{2}"
+        r"\s*[-–—]\s*"
+        r"(?:19|20)\d{2}\b"
+        r")",
+        re.IGNORECASE
+    )
 
-        if "intern" not in line.lower():
+    index = 0
+
+    while index < len(lines):
+
+        line = lines[index]
+
+        lower = line.lower()
+
+        # --------------------------------------------------
+        # Find internship entry
+        # --------------------------------------------------
+
+        if "intern" not in lower:
+
+            index += 1
             continue
 
-        dates = extract_dates(line)
+        # --------------------------------------------------
+        # ROLE
+        # --------------------------------------------------
 
-        # Example:
-        #
-        # Python Development Intern – CodeSphere Labs |
-        # Jan 2026 – Mar 2026
+        role = line
 
-        parts = re.split(
-            r"\s*[|]\s*",
-            line
-        )
+        # --------------------------------------------------
+        # Find organization and duration
+        # --------------------------------------------------
 
-        role_company = parts[0].strip()
-
-        role_company = re.sub(
-            r"\s*(?:Jan(?:uary)?|Feb(?:ruary)?|"
-            r"Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
-            r"Jul(?:y)?|Aug(?:ust)?|"
-            r"Sep(?:tember)?|Oct(?:ober)?|"
-            r"Nov(?:ember)?|Dec(?:ember)?)"
-            r"\s+(?:19|20)\d{2}"
-            r"(?:\s*[-–—]\s*"
-            r"(?:[A-Za-z]+\s+)?(?:19|20)\d{2})?",
-            "",
-            role_company,
-            flags=re.IGNORECASE
-        ).strip(
-            " -–—|"
-        )
-
-        role = role_company
         organization = None
+        duration = None
 
-        role_parts = re.split(
-            r"\s+[–—-]\s+",
-            role_company,
-            maxsplit=1
-        )
+        date_match = date_pattern.search(line)
 
-        if len(role_parts) == 2:
+        if date_match:
 
-            role = role_parts[0].strip()
-            organization = role_parts[1].strip()
+            duration = date_match.group(0)
+
+            # Text before duration
+            before_date = line[
+                :date_match.start()
+            ].strip()
+
+            # Remove separators
+            before_date = before_date.rstrip(
+                "|-–—"
+            ).strip()
+
+            # Try:
+            # Python Development Intern – CodeSphere Labs
+            role_org_parts = re.split(
+                r"\s*[-|–—]\s*",
+                before_date,
+                maxsplit=1
+            )
+
+            if len(role_org_parts) == 2:
+
+                role = role_org_parts[0].strip()
+
+                organization = (
+                    role_org_parts[1].strip()
+                )
+
+        # --------------------------------------------------
+        # If organization wasn't found on same line,
+        # look at next few lines
+        # --------------------------------------------------
+
+        if organization is None:
+
+            for j in range(
+                index + 1,
+                min(index + 3, len(lines))
+            ):
+
+                nearby = lines[j]
+
+                if date_pattern.search(nearby):
+                    continue
+
+                if (
+                    "intern" not in
+                    nearby.lower()
+                ):
+
+                    organization = nearby
+                    break
+
+        # --------------------------------------------------
+        # If duration wasn't found on same line,
+        # search nearby lines
+        # --------------------------------------------------
+
+        if duration is None:
+
+            for j in range(
+                index,
+                min(index + 4, len(lines))
+            ):
+
+                nearby = lines[j]
+
+                match = date_pattern.search(
+                    nearby
+                )
+
+                if match:
+
+                    duration = match.group(0)
+
+                    break
+
+        # --------------------------------------------------
+        # RESPONSIBILITIES
+        # --------------------------------------------------
 
         responsibilities = []
 
-        for next_line in lines[
-            index + 1:index + 8
-        ]:
+        for j in range(
+            index + 1,
+            min(index + 8, len(lines))
+        ):
 
-            if is_bullet(next_line):
+            current = lines[j]
 
-                responsibilities.append(
-                    remove_bullet(next_line)
-                )
+            lower_current = current.lower()
 
-            elif re.match(
-                r"^\d+\.",
-                next_line
+            # Stop at another section
+            if re.match(
+                r"^\d+\.\s*",
+                current
             ):
                 break
+
+            # Skip organization/date information
+            if (
+                date_pattern.search(current)
+                and not is_bullet(current)
+            ):
+                continue
+
+            # Stop at next internship
+            if (
+                "intern" in lower_current
+                and j != index + 1
+            ):
+                break
+
+            # Responsibility bullet
+            if is_bullet(current):
+
+                responsibilities.append(
+                    remove_bullet(current)
+                )
+
+        # --------------------------------------------------
+        # TECHNOLOGIES
+        # --------------------------------------------------
 
         responsibility_text = " ".join(
             responsibilities
@@ -1125,32 +1383,38 @@ def extract_internships(text):
             responsibility_text
         )
 
-        entries.append({
-            "organization": organization,
-            "role": role,
-            "duration": dates,
-            "responsibilities": responsibilities,
-            "technologies_used": technologies
+        # --------------------------------------------------
+        # SAVE INTERNSHIP
+        # --------------------------------------------------
+
+        internships.append({
+
+            "organization":
+                organization,
+
+            "role":
+                role,
+
+            "duration":
+                duration,
+
+            "responsibilities":
+                responsibilities,
+
+            "technologies_used":
+                technologies
+
         })
 
-    return entries
+        index += 1
 
+    return internships
 
 # =========================================================
 # PROJECTS
 # =========================================================
 
 def extract_projects(text):
-    """
-    Extract multiple projects from the Projects section.
-
-    Extracts:
-    - Project Name
-    - Description
-    - Technologies Used
-    - Role
-    - GitHub / Live Project Link
-    """
 
     if not text:
         return []
@@ -1163,114 +1427,85 @@ def extract_projects(text):
 
     projects = []
 
-    # -----------------------------------------------------
-    # Helper: determine whether a line looks like
-    # a project title.
-    # -----------------------------------------------------
-
-    def looks_like_project_title(line):
-
-        lower = line.lower().strip()
-
-        # Metadata lines are not project titles
-        if (
-            lower.startswith("technologies:")
-            or lower.startswith("technology:")
-            or lower.startswith("role:")
-            or lower.startswith("github:")
-            or lower.startswith("live:")
-            or lower.startswith("description:")
-            or lower.startswith("link:")
-        ):
-            return False
-
-        # Contact / metadata lines are not project titles
-        if (
-            "@" in line
-            or "linkedin.com" in lower
-            or "github.com" in lower
-            or re.search(
-                PHONE_PATTERN,
-                line
-            )
-        ):
-            return False
-
-        # A project title is normally short
-        # compared with a description.
-        words = line.split()
-
-        if len(words) > 12:
-            return False
-
-        # A description normally contains sentence punctuation
-        if line.endswith("."):
-            return False
-
-        return True
-
-    # -----------------------------------------------------
-    # Find projects
-    # -----------------------------------------------------
-
     index = 0
 
     while index < len(lines):
 
         line = lines[index]
+        lower_line = line.lower()
 
-        # -------------------------------------------------
-        # Skip numbered headings
-        # -------------------------------------------------
+        # --------------------------------------------------
+        # Skip numbered section headings
+        # --------------------------------------------------
 
-        if re.match(
-            r"^\d+\.\s+",
-            line
-        ):
-            index += 1
-            continue
-
-        # -------------------------------------------------
-        # Check if this can be a project title
-        # -------------------------------------------------
-
-        if not looks_like_project_title(line):
+        if re.match(r"^\d+\.\s*", line):
 
             index += 1
             continue
 
-        # -------------------------------------------------
-        # Check the following lines for project-related
-        # information.
-        # -------------------------------------------------
+        # --------------------------------------------------
+        # Skip metadata lines
+        # These should never become project names
+        # --------------------------------------------------
 
-        look_ahead = " ".join(
-            lines[index + 1:index + 8]
-        ).lower()
-
-        project_indicators = [
-            "technologies:",
-            "technology:",
-            "role:",
-            "github:",
-            "github.com",
-            "live:",
-            "description:"
-        ]
-
-        if not any(
-            indicator in look_ahead
-            for indicator in project_indicators
+        if (
+            lower_line.startswith("role:")
+            or lower_line.startswith("github:")
+            or lower_line.startswith("github link:")
+            or lower_line.startswith("live:")
+            or lower_line.startswith("live link:")
+            or lower_line.startswith("link:")
+            or lower_line.startswith("technologies:")
+            or lower_line.startswith("technology:")
         ):
 
             index += 1
             continue
 
-        # -------------------------------------------------
-        # We found a project
-        # -------------------------------------------------
+        # --------------------------------------------------
+        # Find Technologies line belonging to this project
+        # --------------------------------------------------
 
-        project_name = line.strip()
+        tech_index = None
+
+        for look_ahead in range(
+            index + 1,
+            min(index + 8, len(lines))
+        ):
+
+            check_line = lines[look_ahead].lower()
+
+            if (
+                check_line.startswith("technologies:")
+                or check_line.startswith("technology:")
+            ):
+
+                tech_index = look_ahead
+                break
+
+            # Do not cross another numbered section
+            if re.match(
+                r"^\d+\.\s*",
+                lines[look_ahead]
+            ):
+
+                break
+
+        # --------------------------------------------------
+        # If no Technologies line was found,
+        # this is probably not a project
+        # --------------------------------------------------
+
+        if tech_index is None:
+
+            index += 1
+            continue
+
+        # --------------------------------------------------
+        # PROJECT NAME
+        # --------------------------------------------------
+
+        project_name = line
 
         description_lines = []
 
@@ -1280,113 +1515,72 @@ def extract_projects(text):
 
         project_link = None
 
-        j = index + 1
+        # --------------------------------------------------
+        # DESCRIPTION
+        # Everything between project name and Technologies
+        # --------------------------------------------------
+
+        for j in range(
+            index + 1,
+            tech_index
+        ):
+
+            current = lines[j]
+
+            if current:
+                description_lines.append(
+                    remove_bullet(current)
+                )
+
+        # --------------------------------------------------
+        # TECHNOLOGIES
+        # --------------------------------------------------
+
+        tech_line = lines[tech_index]
+
+        tech_text = tech_line.split(
+            ":",
+            1
+        )[1].strip()
+
+        technologies = extract_technologies(
+            tech_text
+        )
+
+        # --------------------------------------------------
+        # ROLE / GITHUB / LIVE LINK
+        # --------------------------------------------------
+
+        j = tech_index + 1
 
         while j < len(lines):
 
             current = lines[j]
 
-            lower = current.lower()
-
-            # -------------------------------------------------
-            # Stop if another numbered section starts
-            # -------------------------------------------------
-
+            # Stop at next numbered section
             if re.match(
-                r"^\d+\.\s+",
+                r"^\d+\.\s*",
                 current
             ):
                 break
 
-            # -------------------------------------------------
-            # Detect another project title
-            #
-            # Example:
-            #
-            # Resumate - AI Resume Analyzer
-            # ...
-            #
-            # Smart Traffic Analytics Platform
-            # ...
-            # -------------------------------------------------
+            lower = current.lower()
 
-            if (
-                j > index + 1
-                and looks_like_project_title(current)
-            ):
+            # --------------------------------------------------
+            # ROLE
+            # --------------------------------------------------
 
-                remaining = " ".join(
-                    lines[j + 1:j + 8]
-                ).lower()
+            if lower.startswith("role:"):
 
-                if any(
-                    indicator in remaining
-                    for indicator in project_indicators
-                ):
-
-                    break
-
-            # -------------------------------------------------
-            # Technologies
-            # -------------------------------------------------
-
-            if (
-                lower.startswith("technologies:")
-                or lower.startswith("technology:")
-            ):
-
-                tech_text = current.split(
+                role_text = current.split(
                     ":",
                     1
                 )[1].strip()
 
-                technologies = extract_technologies(
-                    tech_text
-                )
-
-            # -------------------------------------------------
-            # Role
-            # -------------------------------------------------
-
-            elif lower.startswith("role:"):
-
-                role = current.split(
-                    ":",
-                    1
-                )[1].strip()
-
-            # -------------------------------------------------
-            # Description
-            # -------------------------------------------------
-
-            elif lower.startswith("description:"):
-
-                description = current.split(
-                    ":",
-                    1
-                )[1].strip()
-
-                if description:
-
-                    description_lines.append(
-                        description
-                    )
-
-            # -------------------------------------------------
-            # GitHub / Live link
-            # -------------------------------------------------
-
-            elif (
-                "github:" in lower
-                or "github.com" in lower
-                or "live:" in lower
-                or "live project" in lower
-                or "link:" in lower
-            ):
-
+                # Find GitHub URL inside role line
                 github_match = re.search(
-                    r"github\.com/[^\s|]+",
-                    current,
+                    r"(?:https?://)?(?:www\.)?github\.com/[^\s|]+",
+                    role_text,
                     re.IGNORECASE
                 )
 
@@ -1394,99 +1588,128 @@ def extract_projects(text):
 
                     project_link = (
                         github_match.group(0)
+                        .rstrip(".,)")
                     )
+
+                    # Remove URL from role
+                    role = re.sub(
+                        re.escape(
+                            github_match.group(0)
+                        ),
+                        "",
+                        role_text,
+                        flags=re.IGNORECASE
+                    )
+
+                    # Remove "GitHub:"
+                    role = re.sub(
+                        r"github\s*:\s*",
+                        "",
+                        role,
+                        flags=re.IGNORECASE
+                    )
+
+                    # Remove extra separators
+                    role = role.replace(
+                        "|",
+                        ""
+                    ).strip()
 
                 else:
 
-                    url_match = re.search(
-                        URL_PATTERN,
-                        current,
-                        re.IGNORECASE
+                    role = role_text
+
+            # --------------------------------------------------
+            # GITHUB
+            # --------------------------------------------------
+
+            elif (
+                lower.startswith("github:")
+                or lower.startswith("github link:")
+            ):
+
+                url_match = re.search(
+                    r"(?:https?://)?(?:www\.)?github\.com/[^\s]+",
+                    current,
+                    re.IGNORECASE
+                )
+
+                if url_match:
+
+                    project_link = (
+                        url_match.group(0)
+                        .rstrip(".,)")
                     )
 
-                    if url_match:
+            # --------------------------------------------------
+            # LIVE PROJECT / OTHER LINK
+            # --------------------------------------------------
 
-                        project_link = (
-                            url_match.group(0)
-                        )
+            elif (
+                lower.startswith("live:")
+                or lower.startswith("live link:")
+                or lower.startswith("link:")
+            ):
 
-            # -------------------------------------------------
-            # Normal description
-            # -------------------------------------------------
+                url_match = re.search(
+                    r"https?://[^\s]+|www\.[^\s]+|github\.com/[^\s]+",
+                    current,
+                    re.IGNORECASE
+                )
+
+                if url_match:
+
+                    project_link = (
+                        url_match.group(0)
+                        .rstrip(".,)")
+                    )
+
+            # --------------------------------------------------
+            # Check if another project is beginning
+            # --------------------------------------------------
 
             else:
 
-                description = remove_bullet(
-                    current
-                )
-
-                if description:
-
-                    description_lines.append(
-                        description
+                if (
+                    j + 1 < len(lines)
+                    and (
+                        lines[j + 1]
+                        .lower()
+                        .startswith("technologies:")
+                        or
+                        lines[j + 1]
+                        .lower()
+                        .startswith("technology:")
                     )
+                ):
+                    break
 
             j += 1
 
-        # -------------------------------------------------
-        # Remove duplicate descriptions
-        # -------------------------------------------------
-
-        cleaned_description = []
-
-        for description in description_lines:
-
-            description = description.strip()
-
-            if (
-                description
-                and description
-                not in cleaned_description
-            ):
-
-                cleaned_description.append(
-                    description
-                )
-
-        # -------------------------------------------------
-        # Detect technologies from description if the
-        # resume doesn't explicitly provide them.
-        # -------------------------------------------------
-
-        if not technologies:
-
-            technologies = extract_technologies(
-                " ".join(
-                    cleaned_description
-                )
-            )
-
-        # -------------------------------------------------
-        # Save project
-        # -------------------------------------------------
+        # --------------------------------------------------
+        # SAVE PROJECT
+        # --------------------------------------------------
 
         projects.append({
 
-            "project_name":
-                project_name,
+            "project_name": project_name,
 
-            "description":
+            "description": (
                 " ".join(
-                    cleaned_description
-                ).strip() or None,
+                    description_lines
+                ).strip()
+                or None
+            ),
 
-            "technologies_used":
-                technologies,
+            "technologies_used": technologies,
 
-            "role":
-                role,
+            "role": role,
 
-            "github_live_link":
-                project_link
+            "github_live_link": project_link
         })
 
-        # Continue from where this project ended
-        index = j
+        # Continue searching for next project
+        index = tech_index + 1
 
     return projects
 
@@ -1651,15 +1874,330 @@ def extract_achievements(text):
 
     return achievements
 
+# ============================================================
+# RESUME SCORE
+# ============================================================
 
-# =========================================================
+def calculate_resume_score(resume_data):
+    """
+    Calculate overall resume score out of 100.
+    """
+
+    score = 0
+
+    # --------------------------------------------------------
+    # 1. Contact Information - 10 points
+    # --------------------------------------------------------
+
+    contact = resume_data.get(
+        "contact_information",
+        {}
+    )
+
+    contact_fields = [
+        "name",
+        "email",
+        "phone",
+        "linkedin",
+        "github"
+    ]
+
+    filled_contacts = sum(
+        1
+        for field in contact_fields
+        if contact.get(field)
+    )
+
+    score += min(
+        filled_contacts * 2,
+        10
+    )
+
+    # --------------------------------------------------------
+    # 2. Professional Summary - 10 points
+    # --------------------------------------------------------
+
+    summary = resume_data.get(
+        "professional_summary",
+        {}
+    )
+
+    summary_text = summary.get(
+        "summary"
+    )
+
+    if summary_text:
+
+        word_count = len(
+            summary_text.split()
+        )
+
+        if word_count >= 20:
+            score += 10
+
+        elif word_count >= 10:
+            score += 7
+
+        else:
+            score += 4
+
+    # --------------------------------------------------------
+    # 3. Education - 10 points
+    # --------------------------------------------------------
+
+    education = resume_data.get(
+        "education",
+        []
+    )
+
+    if education:
+        score += 10
+
+    # --------------------------------------------------------
+    # 4. Technical Skills - 20 points
+    # --------------------------------------------------------
+
+    skills = resume_data.get(
+        "technical_skills",
+        {}
+    )
+
+    skill_categories = [
+        "programming_languages",
+        "frameworks",
+        "libraries",
+        "databases",
+        "tools_and_technologies"
+    ]
+
+    skill_count = 0
+
+    for category in skill_categories:
+
+        skill_count += len(
+            skills.get(
+                category,
+                []
+            )
+        )
+
+    if skill_count >= 15:
+        score += 20
+
+    elif skill_count >= 10:
+        score += 16
+
+    elif skill_count >= 5:
+        score += 12
+
+    elif skill_count > 0:
+        score += 7
+
+    # --------------------------------------------------------
+    # 5. Work Experience - 15 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "work_experience"
+    ):
+        score += 15
+
+    # --------------------------------------------------------
+    # 6. Internships - 10 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "internships"
+    ):
+        score += 10
+
+    # --------------------------------------------------------
+    # 7. Projects - 10 points
+    # --------------------------------------------------------
+
+    projects = resume_data.get(
+        "projects",
+        []
+    )
+
+    if len(projects) >= 2:
+        score += 10
+
+    elif len(projects) == 1:
+        score += 7
+
+    # --------------------------------------------------------
+    # 8. Certifications - 5 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "certifications"
+    ):
+        score += 5
+
+    # --------------------------------------------------------
+    # 9. Achievements - 5 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "achievements"
+    ):
+        score += 5
+
+    return min(
+        score,
+        100
+    )
+
+
+# ============================================================
+# ATS SCORE
+# ============================================================
+
+def calculate_ats_score(resume_data):
+    """
+    Calculate ATS-style score out of 100.
+    """
+
+    score = 0
+
+    # --------------------------------------------------------
+    # 1. Contact Information - 15 points
+    # --------------------------------------------------------
+
+    contact = resume_data.get(
+        "contact_information",
+        {}
+    )
+
+    contact_fields = [
+        "name",
+        "email",
+        "phone",
+        "linkedin",
+        "github"
+    ]
+
+    filled_contacts = sum(
+        1
+        for field in contact_fields
+        if contact.get(field)
+    )
+
+    score += min(
+        filled_contacts * 3,
+        15
+    )
+
+    # --------------------------------------------------------
+    # 2. Professional Summary - 10 points
+    # --------------------------------------------------------
+
+    summary = resume_data.get(
+        "professional_summary",
+        {}
+    )
+
+    if summary.get("summary"):
+        score += 10
+
+    # --------------------------------------------------------
+    # 3. Education - 10 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "education"
+    ):
+        score += 10
+
+    # --------------------------------------------------------
+    # 4. Technical Skills - 25 points
+    # --------------------------------------------------------
+
+    skills = resume_data.get(
+        "technical_skills",
+        {}
+    )
+
+    skill_categories = [
+        "programming_languages",
+        "frameworks",
+        "libraries",
+        "databases",
+        "tools_and_technologies"
+    ]
+
+    total_skills = 0
+
+    for category in skill_categories:
+
+        total_skills += len(
+            skills.get(
+                category,
+                []
+            )
+        )
+
+    if total_skills >= 15:
+        score += 25
+
+    elif total_skills >= 10:
+        score += 20
+
+    elif total_skills >= 5:
+        score += 15
+
+    elif total_skills > 0:
+        score += 8
+
+    # --------------------------------------------------------
+    # 5. Work Experience - 15 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "work_experience"
+    ):
+        score += 15
+
+    # --------------------------------------------------------
+    # 6. Projects - 10 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "projects"
+    ):
+        score += 10
+
+    # --------------------------------------------------------
+    # 7. Certifications - 5 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "certifications"
+    ):
+        score += 5
+
+    # --------------------------------------------------------
+    # 8. Achievements - 5 points
+    # --------------------------------------------------------
+
+    if resume_data.get(
+        "achievements"
+    ):
+        score += 5
+
+    return min(
+        score,
+        100
+    )
+
+# ============================================================
 # SUMMARY ANALYSIS
-# =========================================================
+# ============================================================
 
 def analyze_summary(summary):
 
     if not summary:
-
         return {
             "summary": None,
             "quality": "Not Available",
@@ -1673,6 +2211,7 @@ def analyze_summary(summary):
         summary
     )
 
+    # Evaluate summary length
     if len(words) < 20:
         quality = "Needs Improvement"
 
@@ -1689,15 +2228,18 @@ def analyze_summary(summary):
         "relevance": "Requires Job Description"
     }
 
-
-# =========================================================
+# ============================================================
 # MAIN RESUME ANALYZER
-# =========================================================
+# ============================================================
 
 def analyze_resume(
     text,
     job_description=None
 ):
+
+    # --------------------------------------------------------
+    # Check resume text
+    # --------------------------------------------------------
 
     if not text or not text.strip():
 
@@ -1706,25 +2248,25 @@ def analyze_resume(
             "message": "Resume text is empty."
         }
 
-    # -----------------------------------------------------
-    # Extract sections
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # 1. Extract sections
+    # --------------------------------------------------------
 
     sections = extract_sections(
         text
     )
 
-    # -----------------------------------------------------
-    # Skills
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # 2. Extract skills
+    # --------------------------------------------------------
 
     skills = extract_skills(
         text
     )
 
-    # -----------------------------------------------------
-    # Summary
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # 3. Analyze summary
+    # --------------------------------------------------------
 
     summary = analyze_summary(
         sections.get(
@@ -1733,16 +2275,18 @@ def analyze_resume(
         )
     )
 
-    # -----------------------------------------------------
-    # Job description matching
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # 4. Job description matching
+    # --------------------------------------------------------
 
     relevance = "Not Evaluated"
 
     if job_description:
 
         resume_words = set(
-            extract_keywords(text)
+            extract_keywords(
+                text
+            )
         )
 
         job_words = set(
@@ -1755,96 +2299,125 @@ def analyze_resume(
 
             matched = (
                 resume_words
-                .intersection(job_words)
+                .intersection(
+                    job_words
+                )
             )
 
             relevance = {
-                "matched_keywords": sorted(
-                    matched
-                ),
-                "match_percentage": round(
-                    (
-                        len(matched)
-                        / len(job_words)
-                    ) * 100,
-                    2
-                )
+
+                "matched_keywords":
+                    sorted(
+                        matched
+                    ),
+
+                "match_percentage":
+                    round(
+                        (
+                            len(matched)
+                            /
+                            len(job_words)
+                        ) * 100,
+                        2
+                    )
             }
 
     summary["relevance"] = relevance
 
-    # -----------------------------------------------------
-    # Final result
-    # -----------------------------------------------------
+    # ========================================================
+    # 5. BUILD FINAL RESULT
+    # ========================================================
 
-    return {
+    result = {
 
         "success": True,
 
-        # =============================================
+        # ====================================================
         # 1. CONTACT INFORMATION
-        # =============================================
+        # ====================================================
 
         "contact_information": {
 
-            "name": extract_name(text),
+            "name":
+                extract_name(
+                    text
+                ),
 
-            "email": extract_email(text),
+            "email":
+                extract_email(
+                    text
+                ),
 
-            "phone": extract_phone(text),
+            "phone":
+                extract_phone(
+                    text
+                ),
 
-            "linkedin": extract_linkedin(text),
+            "linkedin":
+                extract_linkedin(
+                    text
+                ),
 
-            "github": extract_github(text)
+            "github":
+                extract_github(
+                    text
+                )
         },
 
-        # =============================================
+        # ====================================================
         # 2. PROFESSIONAL SUMMARY
-        # =============================================
+        # ====================================================
 
-        "professional_summary": summary,
+        "professional_summary":
+            summary,
 
-        # =============================================
+        # ====================================================
         # 3. EDUCATION
-        # =============================================
+        # ====================================================
 
-        "education": extract_education(
-            sections.get(
-                "education",
-                ""
-            )
-        ),
+        "education":
+            extract_education(
+                sections.get(
+                    "education",
+                    ""
+                )
+            ),
 
-        # =============================================
+        # ====================================================
         # 4. TECHNICAL SKILLS
-        # =============================================
+        # ====================================================
 
         "technical_skills": {
 
             "programming_languages":
-                skills[
-                    "programming_languages"
-                ],
+                skills.get(
+                    "programming_languages",
+                    []
+                ),
 
             "frameworks":
-                skills[
-                    "frameworks"
-                ],
+                skills.get(
+                    "frameworks",
+                    []
+                ),
 
             "libraries":
-                skills[
-                    "libraries"
-                ],
+                skills.get(
+                    "libraries",
+                    []
+                ),
 
             "databases":
-                skills[
-                    "databases"
-                ],
+                skills.get(
+                    "databases",
+                    []
+                ),
 
             "tools_and_technologies":
-                skills[
-                    "tools_and_technologies"
-                ],
+                skills.get(
+                    "tools_and_technologies",
+                    []
+                ),
 
             "relevant_keywords":
                 extract_keywords(
@@ -1855,9 +2428,9 @@ def analyze_resume(
                 )
         },
 
-        # =============================================
+        # ====================================================
         # 5. WORK EXPERIENCE
-        # =============================================
+        # ====================================================
 
         "work_experience":
             extract_experience(
@@ -1867,9 +2440,9 @@ def analyze_resume(
                 )
             ),
 
-        # =============================================
+        # ====================================================
         # 6. INTERNSHIPS
-        # =============================================
+        # ====================================================
 
         "internships":
             extract_internships(
@@ -1879,9 +2452,9 @@ def analyze_resume(
                 )
             ),
 
-        # =============================================
+        # ====================================================
         # 7. PROJECTS
-        # =============================================
+        # ====================================================
 
         "projects":
             extract_projects(
@@ -1891,9 +2464,9 @@ def analyze_resume(
                 )
             ),
 
-        # =============================================
+        # ====================================================
         # 8. CERTIFICATIONS
-        # =============================================
+        # ====================================================
 
         "certifications":
             extract_certifications(
@@ -1903,9 +2476,9 @@ def analyze_resume(
                 )
             ),
 
-        # =============================================
+        # ====================================================
         # 9. ACHIEVEMENTS
-        # =============================================
+        # ====================================================
 
         "achievements":
             extract_achievements(
@@ -1915,3 +2488,37 @@ def analyze_resume(
                 )
             )
     }
+
+    # ========================================================
+    # 6. CALCULATE RESUME SCORE
+    # ========================================================
+
+    resume_score = calculate_resume_score(
+        result
+    )
+
+    # ========================================================
+    # 7. CALCULATE ATS SCORE
+    # ========================================================
+
+    ats_score = calculate_ats_score(
+        result
+    )
+
+    # ========================================================
+    # 8. ADD SCORES
+    # ========================================================
+
+    result["resume_score"] = (
+        resume_score
+    )
+
+    result["ats_score"] = (
+        ats_score
+    )
+
+    # ========================================================
+    # 9. RETURN RESULT
+    # ========================================================
+
+    return result
