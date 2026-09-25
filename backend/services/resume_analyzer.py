@@ -2659,6 +2659,322 @@ def calculate_resume_strengths(
 
     return strengths[:5]
 
+def calculate_resume_health(resume_data):
+    """
+    Calculate an overall resume health score
+    based on completeness and important resume sections.
+    """
+
+    score = 0
+    checks = []
+
+    # Contact information
+    contact = resume_data.get("contact_information", {})
+    if contact.get("email") and contact.get("phone"):
+        score += 15
+        checks.append({
+            "section": "Contact Information",
+            "status": "Good",
+            "message": "Email and phone number are available."
+        })
+    else:
+        checks.append({
+            "section": "Contact Information",
+            "status": "Needs Improvement",
+            "message": "Add complete contact information."
+        })
+
+    # Professional summary
+    summary = resume_data.get("professional_summary", {})
+    if summary.get("summary"):
+        score += 15
+        checks.append({
+            "section": "Professional Summary",
+            "status": "Good",
+            "message": "Professional summary is present."
+        })
+    else:
+        checks.append({
+            "section": "Professional Summary",
+            "status": "Needs Improvement",
+            "message": "Add a professional summary."
+        })
+
+    # Technical skills
+    skills = resume_data.get("technical_skills", {})
+    has_skills = any(
+        skills.get(category)
+        for category in [
+            "programming_languages",
+            "frameworks",
+            "libraries",
+            "databases",
+            "tools_and_technologies"
+        ]
+    )
+
+    if has_skills:
+        score += 20
+        checks.append({
+            "section": "Technical Skills",
+            "status": "Good",
+            "message": "Technical skills are clearly listed."
+        })
+    else:
+        checks.append({
+            "section": "Technical Skills",
+            "status": "Needs Improvement",
+            "message": "Add relevant technical skills."
+        })
+
+    # Education
+    education = resume_data.get("education", [])
+    if education:
+        score += 15
+        checks.append({
+            "section": "Education",
+            "status": "Good",
+            "message": "Education details are available."
+        })
+    else:
+        checks.append({
+            "section": "Education",
+            "status": "Needs Improvement",
+            "message": "Add your education details."
+        })
+
+    # Projects
+    projects = resume_data.get("projects", [])
+    if projects:
+        score += 15
+        checks.append({
+            "section": "Projects",
+            "status": "Good",
+            "message": "Technical projects are included."
+        })
+    else:
+        checks.append({
+            "section": "Projects",
+            "status": "Needs Improvement",
+            "message": "Add relevant projects."
+        })
+
+    # Work experience / internships
+    experience = resume_data.get("work_experience", [])
+    internships = resume_data.get("internships", [])
+
+    if experience or internships:
+        score += 10
+        checks.append({
+            "section": "Experience",
+            "status": "Good",
+            "message": "Practical experience is included."
+        })
+    else:
+        checks.append({
+            "section": "Experience",
+            "status": "Needs Improvement",
+            "message": "Add relevant work or internship experience."
+        })
+
+    # Certifications / achievements
+    certifications = resume_data.get("certifications", [])
+    achievements = resume_data.get("achievements", [])
+
+    if certifications or achievements:
+        score += 10
+        checks.append({
+            "section": "Certifications & Achievements",
+            "status": "Good",
+            "message": "Additional qualifications are included."
+        })
+    else:
+        checks.append({
+            "section": "Certifications & Achievements",
+            "status": "Needs Improvement",
+            "message": "Consider adding certifications or achievements."
+        })
+
+    # Overall health label
+    if score >= 85:
+        health = "Excellent"
+    elif score >= 70:
+        health = "Good"
+    elif score >= 50:
+        health = "Fair"
+    else:
+        health = "Needs Improvement"
+
+    return {
+        "score": score,
+        "health": health,
+        "checks": checks
+    }
+
+def calculate_section_analysis(resume_data):
+    """
+    Analyze the quality and availability of major resume sections.
+    """
+
+    sections = []
+
+    # Professional Summary
+    summary = resume_data.get("professional_summary", {})
+    if summary.get("summary"):
+        quality = summary.get("quality", "Good")
+
+        sections.append({
+            "section": "Professional Summary",
+            "status": quality,
+            "message": "Professional summary is present."
+        })
+    else:
+        sections.append({
+            "section": "Professional Summary",
+            "status": "Needs Improvement",
+            "message": "Professional summary is missing."
+        })
+
+    # Education
+    education = resume_data.get("education", [])
+    if education:
+        sections.append({
+            "section": "Education",
+            "status": "Good",
+            "message": "Education details are available."
+        })
+    else:
+        sections.append({
+            "section": "Education",
+            "status": "Needs Improvement",
+            "message": "Education details are missing."
+        })
+
+    # Technical Skills
+    skills = resume_data.get("technical_skills", {})
+
+    has_skills = any(
+        skills.get(category)
+        for category in [
+            "programming_languages",
+            "frameworks",
+            "libraries",
+            "databases",
+            "tools_and_technologies"
+        ]
+    )
+
+    if has_skills:
+        sections.append({
+            "section": "Technical Skills",
+            "status": "Good",
+            "message": "Technical skills are clearly listed."
+        })
+    else:
+        sections.append({
+            "section": "Technical Skills",
+            "status": "Needs Improvement",
+            "message": "Technical skills are missing."
+        })
+
+    # Work Experience
+    work_experience = resume_data.get(
+        "work_experience",
+        []
+    )
+
+    if work_experience:
+        sections.append({
+            "section": "Work Experience",
+            "status": "Good",
+            "message": "Work experience is included."
+        })
+    else:
+        sections.append({
+            "section": "Work Experience",
+            "status": "Needs Improvement",
+            "message": "Work experience is missing."
+        })
+
+    # Internships
+    internships = resume_data.get(
+        "internships",
+        []
+    )
+
+    if internships:
+        sections.append({
+            "section": "Internships",
+            "status": "Good",
+            "message": "Internship experience is included."
+        })
+    else:
+        sections.append({
+            "section": "Internships",
+            "status": "Needs Improvement",
+            "message": "No internship experience found."
+        })
+
+    # Projects
+    projects = resume_data.get(
+        "projects",
+        []
+    )
+
+    if projects:
+        sections.append({
+            "section": "Projects",
+            "status": "Good",
+            "message": "Technical projects are included."
+        })
+    else:
+        sections.append({
+            "section": "Projects",
+            "status": "Needs Improvement",
+            "message": "Projects are missing."
+        })
+
+    # Certifications
+    certifications = resume_data.get(
+        "certifications",
+        []
+    )
+
+    if certifications:
+        sections.append({
+            "section": "Certifications",
+            "status": "Good",
+            "message": "Certifications are included."
+        })
+    else:
+        sections.append({
+            "section": "Certifications",
+            "status": "Needs Improvement",
+            "message": "Certifications are missing."
+        })
+
+    # Achievements
+    achievements = resume_data.get(
+        "achievements",
+        []
+    )
+
+    if achievements:
+        sections.append({
+            "section": "Achievements",
+            "status": "Good",
+            "message": "Achievements are included."
+        })
+    else:
+        sections.append({
+            "section": "Achievements",
+            "status": "Needs Improvement",
+            "message": "Achievements are missing."
+        })
+
+    return sections
+
+
 # ============================================================
 # SUMMARY ANALYSIS
 # ============================================================
@@ -2695,6 +3011,166 @@ def analyze_summary(summary):
         "keywords": keywords,
         "relevance": "Requires Job Description"
     }
+
+def generate_ai_suggestions(
+    resume_data,
+    job_match=None,
+    resume_score=None,
+    ats_score=None
+):
+    suggestions = []
+
+    # Job match suggestions
+    if job_match:
+        missing_skills = job_match.get(
+            "missing_skills",
+            []
+        )
+
+        if missing_skills:
+            skills_text = ", ".join(
+                skill.upper()
+                for skill in missing_skills
+            )
+
+            suggestions.append({
+                "category": "Job Match",
+                "suggestion": (
+                    f"Consider adding or developing "
+                    f"these job-required skills if you "
+                    f"have relevant experience: "
+                    f"{skills_text}."
+                )
+            })
+
+    # Professional summary
+    summary = resume_data.get(
+        "professional_summary",
+        {}
+    )
+
+    if not summary.get("summary"):
+        suggestions.append({
+            "category": "Professional Summary",
+            "suggestion": (
+                "Add a concise professional summary "
+                "highlighting your experience, key "
+                "skills, and career goals."
+            )
+        })
+    elif summary.get("quality") == "Needs Improvement":
+        suggestions.append({
+            "category": "Professional Summary",
+            "suggestion": (
+                "Improve your professional summary by "
+                "making it more specific to your target "
+                "role and highlighting your strongest skills."
+            )
+        })
+
+    # Certifications
+    certifications = resume_data.get(
+        "certifications",
+        []
+    )
+
+    missing_certification_details = False
+
+    for certification in certifications:
+        if not certification.get(
+            "issuing_organization"
+        ):
+            missing_certification_details = True
+            break
+
+    if missing_certification_details:
+        suggestions.append({
+            "category": "Certifications",
+            "suggestion": (
+                "Add the issuing organization for your "
+                "certifications to make them more complete "
+                "and easier to verify."
+            )
+        })
+
+    # Projects
+    projects = resume_data.get(
+        "projects",
+        []
+    )
+
+    if projects:
+        projects_without_links = [
+            project
+            for project in projects
+            if not project.get("github_live_link")
+        ]
+
+        if projects_without_links:
+            suggestions.append({
+                "category": "Projects",
+                "suggestion": (
+                    "Consider adding GitHub or live demo "
+                    "links to projects where available."
+                )
+            })
+
+    else:
+        suggestions.append({
+            "category": "Projects",
+            "suggestion": (
+                "Add relevant technical projects to "
+                "demonstrate practical development skills."
+            )
+        })
+
+    # Experience
+    work_experience = resume_data.get(
+        "work_experience",
+        []
+    )
+
+    if work_experience:
+        suggestions.append({
+            "category": "Work Experience",
+            "suggestion": (
+                "Use measurable results and specific "
+                "achievements in your experience "
+                "descriptions where possible."
+            )
+        })
+    else:
+        suggestions.append({
+            "category": "Work Experience",
+            "suggestion": (
+                "Consider adding relevant internship, "
+                "freelance, or practical experience."
+            )
+        })
+
+    # ATS score
+    if ats_score is not None and ats_score < 70:
+        suggestions.append({
+            "category": "ATS",
+            "suggestion": (
+                "Improve ATS compatibility by using "
+                "relevant job keywords and clearly "
+                "structured resume sections."
+            )
+        })
+
+    # Resume score
+    if resume_score is not None and resume_score < 70:
+        suggestions.append({
+            "category": "Resume Score",
+            "suggestion": (
+                "Strengthen your resume by improving "
+                "content completeness, skills, projects, "
+                "and measurable achievements."
+            )
+        })
+
+    return suggestions[:6]
 
 # ============================================================
 # MAIN RESUME ANALYZER
@@ -2824,6 +3300,8 @@ def analyze_resume(
     },
     job_match
 )
+
+
 
     # ========================================================
     # 5.5 RESUME ISSUES
@@ -3161,6 +3639,17 @@ def analyze_resume(
         result
     )
 
+    ai_suggestions = generate_ai_suggestions(
+    result,
+    job_match,
+    resume_score,
+    ats_score
+)
+
+    resume_health = calculate_resume_health(result)
+    section_analysis = calculate_section_analysis(result)
+
+
     # ========================================================
     # 8. ADD SCORES
     # ========================================================
@@ -3172,6 +3661,10 @@ def analyze_resume(
     result["ats_score"] = (
         ats_score
     )
+
+    result["ai_suggestions"] = ai_suggestions
+    result["resume_health"] = resume_health
+    result["section_analysis"] = section_analysis
 
     # ========================================================
     # 9. RETURN RESULT
