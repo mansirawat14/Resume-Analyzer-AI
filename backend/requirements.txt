@@ -13,5 +13,6 @@ spaCy
 openai
 
 psycopg[binary]
+PyMySQL
 
 gunicorn
