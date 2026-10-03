@@ -16,3 +16,6 @@ uploads/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Database backups
+database/backup/*.sql
