@@ -374,10 +374,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
           </div>
-          <span class="text-xl font-extrabold tracking-tight">RESUMATE</span>
+          <span class="text-2xl font-extrabold tracking-tight">RESUMATE</span>
         </div>
 
-        <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-[var(--text-secondary)]">
+        <nav class="hidden md:flex items-center gap-6 text-base font-medium text-[var(--text-secondary)]">
           <a href="#landing" onclick="navigateTo('landing')" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
           <a href="#dashboard" onclick="navigateTo('dashboard')" class="text-indigo-500 font-semibold transition-colors">Dashboard</a>
           <a href="#skills" onclick="navigateTo('skills')" class="hover:text-[var(--text-primary)] transition-colors">Features</a>
@@ -389,7 +389,7 @@
       <!-- Right: Actions, Theme Switcher & User Profile -->
       <div class="flex items-center gap-3 sm:gap-5">
         <!-- Quick Nav to Upload Button -->
-        <button onclick="navigateTo('upload')" class="hidden sm:inline-flex py-1.5 px-4 gradient-btn text-xs font-semibold">
+        <button onclick="navigateTo('upload')" class="hidden sm:inline-flex py-1.5 px-4 gradient-btn text-sm font-semibold">
           Analyze New Resume
         </button>
 
@@ -409,7 +409,11 @@
         </div>
 
         <!-- Notification Bell -->
-        <button class="relative p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] transition-colors" title="Notifications">
+        <button
+    onclick="toggleNotifications()"
+    class="relative p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] transition-colors"
+    title="Notifications"
+>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
           <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
         </button>
@@ -420,12 +424,17 @@
         </button>
 
         <!-- User Profile Dropdown -->
-        <div class="flex items-center gap-3 pl-2 sm:border-l border-[var(--border-color)]">
+        <div
+    class="flex items-center gap-3 pl-2 sm:border-l border-[var(--border-color)] cursor-pointer hover:opacity-90 transition-opacity"
+    id="profileArea"
+    title="Edit Profile"
+    onclick="showProfileModal()"
+>
           <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-            R
+            U
           </div>
           <div class="hidden sm:block text-left">
-            <div class="text-xs font-bold leading-tight" id="userNameDisplay">User</div>
+            <div class="text-sm font-bold leading-tight" id="userNameDisplay">User</div>
             <div class="text-[11px] text-[var(--text-muted)]">ResuMate User</div>
           </div>
           <button onclick="logout()" class="text-xs text-red-500 hover:text-red-600 font-semibold ml-1" title="Sign Out">
@@ -2014,4 +2023,3 @@
   <script src="../js/app.js"></script>
 </body>
 </html>
-

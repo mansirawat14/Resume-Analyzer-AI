@@ -304,6 +304,44 @@ function resetDashboardForNewUser() {
   }
 }
 
+function toggleNotifications() {
+    let panel = document.getElementById("notificationPanel");
+
+    if (!panel) {
+        panel = document.createElement("div");
+
+        panel.id = "notificationPanel";
+
+        panel.className =
+            "fixed top-16 right-6 w-80 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-2xl z-50 overflow-hidden";
+
+        panel.innerHTML = `
+            <div class="px-4 py-3 border-b border-[var(--border-color)] flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[var(--text-primary)]">
+                    Notifications
+                </h3>
+                <span class="text-xs text-[var(--text-muted)]">
+                    0 new
+                </span>
+            </div>
+
+            <div class="px-4 py-8 text-center">
+                <div class="text-2xl mb-2">🔔</div>
+                <p class="text-sm font-semibold text-[var(--text-primary)]">
+                    No notifications
+                </p>
+                <p class="text-xs text-[var(--text-muted)] mt-1">
+                    You're all caught up!
+                </p>
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+    } else {
+        panel.remove();
+    }
+}
+
 /**
  * Complete login process and transition to Dashboard with current theme intact
  */
@@ -1487,13 +1525,121 @@ function shareReport() {
 }
 
 function showHelpModal() {
-  alert(
-    "RESUMATE AI Quick Guide:\n\n" +
-    "• Switch themes anytime using the toggle switch (Sun/Moon) on Login or Dashboard.\n" +
-    "• Use the sidebar to inspect all 10 analysis screens.\n" +
-    "• Upload custom resumes or click 'Analyze Resume' to see live AI processing.\n" +
-    "• Apply suggestions to interactively boost your score in real-time."
-  );
+    const existingModal = document.getElementById("helpModal");
+
+    if (existingModal) {
+        existingModal.remove();
+        return;
+    }
+
+    const modal = document.createElement("div");
+
+    modal.id = "helpModal";
+
+    modal.className =
+        "fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4";
+
+    modal.innerHTML = `
+        <div class="w-full max-w-lg resumate-card shadow-2xl border border-indigo-500/20 overflow-hidden">
+
+            <div class="flex items-center justify-between px-6 py-5 border-b border-[var(--border-color)]">
+                <div>
+                    <h2 class="text-lg font-bold text-[var(--text-primary)]">
+                        ResuMate Quick Guide
+                    </h2>
+                    <p class="text-sm text-[var(--text-muted)] mt-1">
+                        Get the most out of your resume analysis.
+                    </p>
+                </div>
+
+                <button
+                    onclick="document.getElementById('helpModal').remove()"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] transition-colors text-xl"
+                    title="Close"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="px-6 py-5 space-y-4">
+
+                <div class="flex gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+                        ☀️
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                            Switch themes
+                        </h3>
+                        <p class="text-sm text-[var(--text-muted)] mt-1">
+                            Switch between light and dark mode using the theme toggle.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
+                        📊
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                            Explore your analysis
+                        </h3>
+                        <p class="text-sm text-[var(--text-muted)] mt-1">
+                            Use the sidebar to explore your resume score, skills, suggestions, and section analysis.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
+                        📄
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                            Analyze your resume
+                        </h3>
+                        <p class="text-sm text-[var(--text-muted)] mt-1">
+                            Upload your resume or click Analyze New Resume to start your analysis.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                        ✨
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                            Improve your resume
+                        </h3>
+                        <p class="text-sm text-[var(--text-muted)] mt-1">
+                            Review your suggestions and apply improvements to strengthen your resume.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="px-6 py-4 border-t border-[var(--border-color)] flex justify-end">
+                <button
+                    onclick="document.getElementById('helpModal').remove()"
+                    class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                    Got it
+                </button>
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener("click", function(event) {
+        if (event.target === modal) {
+            modal.remove();
+        }
+    });
 }
 
 // =========================================================================
@@ -1562,4 +1708,156 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, false);
   }
-});a
+});
+
+function showProfileModal() {
+    const existingModal = document.getElementById("profileModal");
+
+    if (existingModal) {
+        existingModal.remove();
+        return;
+    }
+
+    const modal = document.createElement("div");
+
+    modal.id = "profileModal";
+
+    modal.className =
+        "fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4";
+
+    modal.innerHTML = `
+        <div class="w-full max-w-md resumate-card shadow-2xl border border-indigo-500/20 overflow-hidden">
+
+            <div class="flex items-center justify-between px-6 py-5 border-b border-[var(--border-color)]">
+                <div>
+                    <h2 class="text-lg font-bold text-[var(--text-primary)]">
+                        My Profile
+                    </h2>
+                    <p class="text-sm text-[var(--text-muted)] mt-1">
+                        View and manage your ResuMate profile.
+                    </p>
+                </div>
+
+                <button
+                    onclick="document.getElementById('profileModal').remove()"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] transition-colors text-xl"
+                    title="Close"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="px-6 py-6">
+
+                <div class="flex flex-col items-center mb-6">
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                        R
+                    </div>
+
+                    <h3 class="mt-3 text-base font-bold text-[var(--text-primary)]">
+                        ${document.getElementById("userNameDisplay")?.textContent || "User"}
+                    </h3>
+
+                    <p class="text-sm text-[var(--text-muted)]">
+                        ResuMate User
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+                            Full Name
+                        </label>
+                        <input
+                            id="profileNameInput"
+                            type="text"
+                            value="${document.getElementById("userNameDisplay")?.textContent || ""}"
+                            class="w-full px-4 py-3 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] outline-none focus:border-indigo-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            placeholder="Your registered email"
+                            class="w-full px-4 py-3 rounded-lg bg-[var(--bg-card-hover)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] outline-none focus:border-indigo-500"
+                        >
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="px-6 py-4 border-t border-[var(--border-color)] flex justify-end gap-3">
+
+                <button
+                    onclick="document.getElementById('profileModal').remove()"
+                    class="px-4 py-2.5 rounded-lg border border-[var(--border-color)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    onclick="saveProfileChanges()"
+                    class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-semibold hover:opacity-90"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener("click", function(event) {
+        if (event.target === modal) {
+            modal.remove();
+        }
+    });
+}
+function saveProfileChanges() {
+    const nameInput = document.getElementById("profileNameInput");
+
+    if (!nameInput) return;
+
+    const newName = nameInput.value.trim();
+
+    if (!newName) {
+        alert("Please enter your name.");
+        return;
+    }
+
+    // Update the name in the dashboard header
+    const userNameDisplay = document.getElementById("userNameDisplay");
+
+    if (userNameDisplay) {
+        userNameDisplay.textContent = newName;
+    }
+
+    // Update dashboard greeting
+    const dashboardGreeting = document.getElementById("dashboardGreeting");
+
+    if (dashboardGreeting) {
+        dashboardGreeting.textContent = `Hello, ${newName} 👋`;
+    }
+
+    // Close profile modal
+    const modal = document.getElementById("profileModal");
+
+    if (modal) {
+        modal.remove();
+    }
+
+    // Show success message
+    if (typeof showToast === "function") {
+        showToast("Profile updated successfully.");
+    } else {
+        alert("Profile updated successfully.");
+    }
+}
