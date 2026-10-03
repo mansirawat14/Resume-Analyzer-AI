@@ -772,77 +772,149 @@
           <!-- 4 Main KPI Cards (Matching Screen 4) -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <!-- Resume Score -->
-            <div class="resumate-card p-5 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-[var(--text-secondary)] mb-1">Resume Score</div>
-                <div class="text-2xl sm:text-3xl font-extrabold text-indigo-500" id="kpiResumeScore">0<span class="text-xs text-[var(--text-muted)] font-normal">/100</span></div>
-              </div>
-              <div class="w-12 h-12 relative flex items-center justify-center">
-                <svg class="w-full h-full gauge-ring" viewBox="0 0 36 36">
-                  <path class="gauge-circle-bg" stroke-width="3.5" fill="none" stroke="currentColor" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path
-  id="resumeScoreCircle"
-  stroke="#6366f1"
-  stroke-width="3.5"
-  stroke-dasharray="0, 100"
-  stroke-linecap="round"
-  fill="none"
-  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-/>
-                </svg>
-              </div>
-            </div>
+<div class="resumate-card p-5 flex items-center justify-between">
+
+    <div>
+        <div class="text-sm font-medium text-[var(--text-secondary)] mb-1">
+            Resume Score
+        </div>
+
+        <div class="text-3xl sm:text-4xl font-extrabold text-indigo-500" id="kpiResumeScore">
+    0<span class="text-xl text-[var(--text-muted)] font-normal align-baseline ml-0.5">/100</span>
+</div>
+
+        <div class="text-[11px] text-[var(--text-muted)] mt-1" id="resumeScoreStatus">
+            No analysis yet
+        </div>
+    </div>
+
+    <div class="w-12 h-12 relative flex items-center justify-center">
+        <svg class="w-full h-full gauge-ring" viewBox="0 0 36 36">
+
+            <path
+                class="gauge-circle-bg"
+                stroke-width="3.5"
+                fill="none"
+                stroke="currentColor"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+
+            <path
+                id="resumeScoreCircle"
+                stroke="#6366f1"
+                stroke-width="3.5"
+                stroke-dasharray="0, 100"
+                stroke-linecap="round"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+
+        </svg>
+    </div>
+
+</div>
 
             <!-- ATS Score -->
-             
-            <div class="resumate-card p-5 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-[var(--text-secondary)] mb-1">ATS Score</div>
-                <div id="kpiAtsScore" class="text-2xl sm:text-3xl font-extrabold text-cyan-500">0%</div>
-              </div>
-              <div class="w-12 h-12 relative flex items-center justify-center">
-                <svg class="w-full h-full gauge-ring" viewBox="0 0 36 36">
-                  <path class="gauge-circle-bg" stroke-width="3.5" fill="none" stroke="currentColor" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path
-  id="atsScoreCircle"
-  stroke="#06b6d4"
-  stroke-width="3.5"
-  stroke-dasharray="0, 100"
-  stroke-linecap="round"
-  fill="none"
-  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-/>
-                </svg>
-              </div>
-            </div>
+<div class="resumate-card p-5 flex items-center justify-between">
+
+    <div>
+
+        <div class="text-sm font-medium text-[var(--text-secondary)] mb-1">
+            ATS Score
+        </div>
+
+        <div class="text-3xl sm:text-4xl font-extrabold text-cyan-500" id="kpiAtsScore">
+            0%
+        </div>
+
+        <div class="text-xs text-[var(--text-muted)] mt-1" id="atsScoreStatus">
+            No analysis yet
+        </div>
+
+    </div>
+
+    <div class="w-12 h-12 relative flex items-center justify-center">
+        <svg class="w-full h-full gauge-ring" viewBox="0 0 36 36">
+
+            <path
+                class="gauge-circle-bg"
+                stroke-width="3.5"
+                fill="none"
+                stroke="currentColor"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+
+            <path
+                id="atsScoreCircle"
+                stroke="#06b6d4"
+                stroke-width="3.5"
+                stroke-dasharray="0, 100"
+                stroke-linecap="round"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+
+        </svg>
+    </div>
+
+</div>
 
             <!-- Skills Match -->
-            <div class="resumate-card p-5 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-[var(--text-secondary)] mb-1">Skills Match</div>
-                <div id="kpiSkillsMatch" class="text-2xl sm:text-3xl font-extrabold text-pink-500">0%</div>
-              </div>
-              <div class="w-12 h-12 relative flex items-center justify-center">
-                <svg class="w-full h-full gauge-ring" viewBox="0 0 36 36">
-                  <path class="gauge-circle-bg" stroke-width="3.5" fill="none" stroke="currentColor" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-               <path
-  id="skillsMatchCircle"
-  stroke="#ec4899"
-  stroke-width="3.5"
-  stroke-dasharray="0, 100"
-  stroke-linecap="round"
-  fill="none"
-  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-/>
-                </svg>
-              </div>
-            </div>
+<div class="resumate-card p-5 flex items-center justify-between">
+
+    <div>
+
+        <div class="text-sm font-medium text-[var(--text-secondary)] mb-1">
+            Skills Match
+        </div>
+
+        <div class="text-3xl sm:text-4xl font-extrabold text-pink-500" id="kpiSkillsMatch">
+            0%
+        </div>
+
+        <div class="text-xs text-[var(--text-muted)] mt-1" id="skillsMatchStatus">
+            No analysis yet
+        </div>
+
+    </div>
+
+    <div class="w-12 h-12 relative flex items-center justify-center">
+        <svg class="w-full h-full gauge-ring" viewBox="0 0 36 36">
+
+            <path
+                class="gauge-circle-bg"
+                stroke-width="3.5"
+                fill="none"
+                stroke="currentColor"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+
+            <path
+                id="skillsMatchCircle"
+                stroke="#ec4899"
+                stroke-width="3.5"
+                stroke-dasharray="0, 100"
+                stroke-linecap="round"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+
+        </svg>
+    </div>
+
+</div>
 
             <!-- Issues Found -->
             <div class="resumate-card p-5 flex items-center justify-between">
               <div>
-                <div class="text-xs font-medium text-[var(--text-secondary)] mb-1">Issues Found</div>
-                <div class="text-2xl sm:text-3xl font-extrabold text-orange-500" id="kpiIssuesCount">0</div>
+                <div class="text-sm font-medium text-[var(--text-secondary)] mb-1">Issues Found</div>
+                <div class="text-3xl sm:text-4xl font-extrabold text-orange-500" id="kpiIssuesCount">0</div>
+                <div
+  class="text-xs text-[var(--text-muted)] mt-1"
+  id="issuesStatus"
+>
+  No analysis yet
+</div>
               </div>
               <div class="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>

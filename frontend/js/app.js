@@ -751,26 +751,21 @@ if (resumeScoreCircle) {
     appState.issuesCount =
       data.issues_found ?? 0;
 
-      const kpiSkillsMatch =
-  document.getElementById('kpiSkillsMatch');
 
-if (kpiSkillsMatch) {
-  const matchPercentage =
-    data.job_match?.match_percentage;
-
-  kpiSkillsMatch.textContent =
-    matchPercentage !== null &&
-    matchPercentage !== undefined
-      ? `${matchPercentage}%`
-      : 'N/A';
-}
-
-      const kpiIssuesCount =
+const kpiIssuesCount =
   document.getElementById('kpiIssuesCount');
 
 if (kpiIssuesCount) {
   kpiIssuesCount.textContent =
     data.issues_found ?? 0;
+}
+
+// Update Issues Found status
+const issuesStatus =
+  document.getElementById('issuesStatus');
+
+if (issuesStatus) {
+  issuesStatus.textContent = 'Analysis completed';
 }
 
       const kpiAtsScore =
@@ -780,6 +775,7 @@ if (kpiAtsScore) {
   kpiAtsScore.textContent =
     `${data.ats_score ?? 0}%`;
 }
+
 // Update ATS Score progress circle
 const atsScoreCircle =
   document.getElementById('atsScoreCircle');
@@ -792,6 +788,13 @@ if (atsScoreCircle) {
     `${score}, 100`
   );
 }
+// Update ATS Score status
+const atsScoreStatus =
+  document.getElementById('atsScoreStatus');
+
+if (atsScoreStatus) {
+  atsScoreStatus.textContent = 'Analysis completed';
+}
 
       // Update Resume Score on Dashboard
 const kpiResumeScore =
@@ -801,6 +804,73 @@ if (kpiResumeScore) {
   kpiResumeScore.innerHTML =
     `${data.resume_score}<span class="text-xs text-[var(--text-muted)] font-normal">/100</span>`;
 }
+// Update Resume Score status
+const resumeScoreStatus =
+  document.getElementById('resumeScoreStatus');
+
+if (resumeScoreStatus) {
+  resumeScoreStatus.textContent = 'Analysis completed';
+}
+
+// Update Skills Match on Dashboard
+// Update Skills Match on Dashboard
+const kpiSkillsMatch =
+    document.getElementById('kpiSkillsMatch');
+
+// Get latest Job Match percentage
+const savedJobMatch =
+    localStorage.getItem('resumateJobMatchPercentage');
+
+const dashboardMatchPercentage =
+    savedJobMatch !== null
+        ? Number(savedJobMatch)
+        : null;
+
+if (kpiSkillsMatch) {
+    kpiSkillsMatch.textContent =
+        dashboardMatchPercentage !== null
+            ? `${dashboardMatchPercentage}%`
+            : '0%';
+}
+
+// Update Skills Match progress circle
+const skillsMatchCircle =
+    document.getElementById('skillsMatchCircle');
+
+if (skillsMatchCircle) {
+    skillsMatchCircle.setAttribute(
+        'stroke-dasharray',
+        dashboardMatchPercentage !== null
+            ? `${dashboardMatchPercentage}, 100`
+            : '0, 100'
+    );
+}
+
+// Update Skills Match status
+const skillsMatchStatus =
+    document.getElementById('skillsMatchStatus');
+
+if (skillsMatchStatus) {
+    skillsMatchStatus.textContent =
+        dashboardMatchPercentage !== null
+            ? 'Analysis completed'
+            : 'No analysis yet';
+}
+const jobMatch =
+    data.job_match || {};
+
+const matchPercentage =
+    jobMatch.match_percentage;
+
+    
+if (kpiSkillsMatch) {
+    kpiSkillsMatch.textContent =
+        matchPercentage !== null &&
+        matchPercentage !== undefined
+            ? `${matchPercentage}%`
+            : '0%';
+}
+
 
 // Update Top Strengths
 const topStrengthsList =
@@ -1116,15 +1186,61 @@ async function analyzeJobMatch() {
       );
     }
 
+    console.log("JOB MATCH DATA:", data.job_match);
+
     // Save latest analysis
     resumeAnalysisData = data;
 
     // Get job match result
     const jobMatch =
       data.job_match || {};
+      console.log("JOB MATCH DATA:", data.job_match);
 
     const matchPercentage =
       jobMatch.match_percentage;
+
+      // Update Dashboard Skills Match with Job Match result
+const dashboardSkillsMatchCard =
+  document.getElementById('kpiSkillsMatch');
+
+const dashboardSkillsMatchCircle =
+  document.getElementById('skillsMatchCircle');
+
+const dashboardSkillsMatchStatus =
+  document.getElementById('skillsMatchStatus');
+
+if (
+  matchPercentage !== null &&
+  matchPercentage !== undefined
+) {
+  if (dashboardSkillsMatchCard) {
+    dashboardSkillsMatchCard.textContent =
+      `${matchPercentage}%`;
+  }
+
+  if (dashboardSkillsMatchCircle) {
+    dashboardSkillsMatchCircle.setAttribute(
+      'stroke-dasharray',
+      `${Number(matchPercentage)}, 100`
+    );
+  }
+
+  if (dashboardSkillsMatchStatus) {
+    dashboardSkillsMatchStatus.textContent =
+      'Analysis completed';
+  }
+}
+
+      // Save latest Job Match percentage for Dashboard
+if (
+  matchPercentage !== null &&
+  matchPercentage !== undefined
+) {
+  localStorage.setItem(
+    'resumateJobMatchPercentage',
+    matchPercentage
+  );
+}
 
     const matchedSkills =
       jobMatch.matched_skills || [];
@@ -1132,18 +1248,8 @@ async function analyzeJobMatch() {
     const missingSkills =
       jobMatch.missing_skills || [];
 
-    // Update Skills Match KPI
-    const kpiSkillsMatch =
-      document.getElementById('kpiSkillsMatch');
-
-    if (kpiSkillsMatch) {
-
-      kpiSkillsMatch.textContent =
-        matchPercentage !== null &&
-        matchPercentage !== undefined
-          ? `${matchPercentage}%`
-          : 'N/A';
-    }
+    
+      
     // Update Skills Match progress circle
 const skillsMatchCircle =
   document.getElementById('skillsMatchCircle');
