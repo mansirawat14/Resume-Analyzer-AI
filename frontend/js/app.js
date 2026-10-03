@@ -804,6 +804,238 @@ if (kpiResumeScore) {
   kpiResumeScore.innerHTML =
     `${data.resume_score}<span class="text-xs text-[var(--text-muted)] font-normal">/100</span>`;
 }
+
+// Update Score Overview current score
+const scoreCurrentLabel =
+  document.getElementById('scoreCurrentLabel');
+
+if (scoreCurrentLabel) {
+  scoreCurrentLabel.textContent =
+    data.resume_score;
+}
+
+// ============================================================
+// SCORE OVERVIEW - REAL RESUME SCORE HISTORY
+// ============================================================
+
+const currentResumeScore = Number(data.resume_score) || 0;
+
+// Get previous score history
+let scoreHistory = JSON.parse(
+  localStorage.getItem('resumateScoreHistory') || '[]'
+);
+
+// Add score only if it is different from the previous analysis
+const lastScore = scoreHistory[scoreHistory.length - 1];
+
+if (lastScore !== currentResumeScore) {
+  scoreHistory.push(currentResumeScore);
+}
+
+// Keep only latest 4 different analyses
+scoreHistory = scoreHistory.slice(-4);
+
+// Save history
+localStorage.setItem(
+  'resumateScoreHistory',
+  JSON.stringify(scoreHistory)
+);
+
+// ------------------------------------------------------------
+// Chart elements
+// ------------------------------------------------------------
+
+const scoreChartLine =
+  document.getElementById('scoreChartLine');
+
+const scoreHistoryPoints =
+  document.getElementById('scoreHistoryPoints');
+
+  const scoreNoAnalysisText =
+  document.getElementById('scoreNoAnalysisText');
+
+if (scoreNoAnalysisText) {
+  scoreNoAnalysisText.style.display =
+    scoreHistory.length === 0
+      ? 'block'
+      : 'none';
+}
+
+const scoreChartLabels =
+  document.getElementById('scoreChartLabels');
+
+const scoreImprovement =
+  document.getElementById('scoreImprovement');
+
+// Total number of points
+const totalPoints = scoreHistory.length;
+
+// ------------------------------------------------------------
+// Calculate chart coordinates
+// ------------------------------------------------------------
+
+const chartPoints = scoreHistory.map((score, index) => {
+
+  const x =
+    totalPoints === 1
+      ? 270
+      : 30 + (
+          index * (240 / (totalPoints - 1))
+        );
+
+  const y =
+    105 - (Number(score) * 0.8);
+
+  return {
+    x,
+    y,
+    score: Number(score)
+  };
+});
+
+// ------------------------------------------------------------
+// Draw line
+// ------------------------------------------------------------
+
+if (scoreChartLine && chartPoints.length > 0) {
+
+  scoreChartLine.setAttribute(
+    'points',
+    chartPoints
+      .map(point => `${point.x},${point.y}`)
+      .join(' ')
+  );
+}
+
+// ------------------------------------------------------------
+// Draw points + score numbers
+// ------------------------------------------------------------
+
+if (scoreHistoryPoints) {
+
+  scoreHistoryPoints.innerHTML = '';
+
+  chartPoints.forEach((point, index) => {
+
+    const isCurrent =
+      index === chartPoints.length - 1;
+
+    // Circle
+    const circle =
+      document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'circle'
+      );
+
+    circle.setAttribute('cx', point.x);
+    circle.setAttribute('cy', point.y);
+    circle.setAttribute(
+      'r',
+      isCurrent ? '5.5' : '4.5'
+    );
+
+    circle.setAttribute(
+      'fill',
+      isCurrent
+        ? '#8b5cf6'
+        : '#6366f1'
+    );
+
+    circle.setAttribute(
+      'stroke',
+      '#ffffff'
+    );
+
+    circle.setAttribute(
+      'stroke-width',
+      '2'
+    );
+
+    scoreHistoryPoints.appendChild(circle);
+
+    // Score number
+    const text =
+      document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'text'
+      );
+
+    text.setAttribute('x', point.x);
+    text.setAttribute(
+      'y',
+      point.y - 10
+    );
+
+    text.setAttribute(
+      'text-anchor',
+      'middle'
+    );
+
+    text.setAttribute(
+      'font-size',
+      '11'
+    );
+
+    text.setAttribute(
+      'font-weight',
+      'bold'
+    );
+
+    text.setAttribute(
+      'fill',
+      isCurrent
+        ? '#8b5cf6'
+        : '#ffffff'
+    );
+
+    text.textContent = point.score;
+
+    scoreHistoryPoints.appendChild(text);
+  });
+}
+
+// ------------------------------------------------------------
+// Update version labels
+// ------------------------------------------------------------
+
+if (scoreChartLabels) {
+
+  scoreChartLabels.innerHTML = '';
+
+  scoreHistory.forEach((score, index) => {
+
+    const label =
+      document.createElement('span');
+
+    if (index === scoreHistory.length - 1) {
+
+      label.textContent =
+        `V${index + 1} (Current)`;
+
+      label.className =
+        'text-indigo-500 font-bold';
+
+    } else {
+
+      label.textContent =
+        `V${index + 1}`;
+    }
+
+    scoreChartLabels.appendChild(label);
+  });
+}
+
+// Update Score Overview total
+
+// Update total score
+if (scoreImprovement) {
+  const latestScore =
+    Number(data.resume_score) || 0;
+
+  scoreImprovement.textContent =
+    `${latestScore} pts total`;
+}
+
 // Update Resume Score status
 const resumeScoreStatus =
   document.getElementById('resumeScoreStatus');
@@ -1967,3 +2199,193 @@ function saveProfileChanges() {
         alert("Profile updated successfully.");
     }
 }
+
+function toggleChatbot() {
+    const chatbotWindow =
+        document.getElementById('chatbotWindow');
+
+    const greeting =
+        document.getElementById('chatbotGreeting');
+
+        const suggestions =
+    document.getElementById('chatbotSuggestions');
+
+     if (!chatbotWindow) return;
+     
+if (suggestions) {
+    suggestions.classList.remove('hidden');
+}
+
+    // Hide greeting
+    if (greeting) {
+        greeting.classList.add('hidden');
+    }
+
+    // Open chatbot
+    chatbotWindow.classList.remove('hidden');
+}
+function closeChatbot() {
+    const chatbotWindow =
+        document.getElementById('chatbotWindow');
+
+    if (chatbotWindow) {
+        chatbotWindow.classList.add('hidden');
+    }
+}
+async function sendChatbotMessage() {
+    const input =
+        document.getElementById('chatbotInput');
+
+    const messages =
+        document.getElementById('chatbotMessages');
+
+    if (!input || !messages) return;
+
+    const userMessage =
+        input.value.trim();
+
+    if (!userMessage) return;
+
+    const suggestions =
+    document.getElementById('chatbotSuggestions');
+
+if (suggestions) {
+    suggestions.classList.add('hidden');
+}
+
+    // Show user's message
+    const userBubble =
+        document.createElement('div');
+
+    userBubble.className =
+        'flex justify-end';
+
+    userBubble.innerHTML = `
+        <div class="max-w-[80%] rounded-2xl rounded-tr-sm px-3 py-2 bg-indigo-500 text-white text-sm">
+            ${userMessage}
+        </div>
+    `;
+
+    messages.appendChild(userBubble);
+
+    // Clear input
+    input.value = '';
+
+    // Scroll to bottom
+    messages.scrollTop =
+        messages.scrollHeight;
+
+        // Show typing indicator
+const typingBubble =
+    document.createElement('div');
+
+typingBubble.id =
+    'chatbotTyping';
+
+typingBubble.className =
+    'flex items-start gap-2';
+
+typingBubble.innerHTML = `
+    <img
+        src="../assets/chatbot.jpeg"
+        class="w-8 h-8 rounded-full object-contain"
+        alt="AI"
+    >
+
+    <div class="rounded-2xl rounded-tl-sm px-3 py-2 bg-[var(--bg-card-hover)] text-sm text-[var(--text-muted)]">
+        ResuMate AI is typing...
+    </div>
+`;
+
+messages.appendChild(typingBubble);
+
+messages.scrollTop =
+    messages.scrollHeight;
+    
+    
+
+    try {
+        const response =
+            await fetch(
+                'http://127.0.0.1:5000/api/chatbot/chat',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        resume_data:
+                            resumeAnalysisData || null
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                'Chatbot request failed.'
+            );
+        }
+
+        // Keep typing indicator visible briefly
+await new Promise(resolve =>
+    setTimeout(resolve, 800)
+);
+
+        const typingIndicator =
+    document.getElementById('chatbotTyping');
+
+if (typingIndicator) {
+    typingIndicator.remove();
+}
+
+        // Show AI response
+        const aiBubble =
+            document.createElement('div');
+
+        aiBubble.className =
+            'flex items-start gap-2';
+
+        aiBubble.innerHTML = `
+            <img
+                src="../assets/chatbot.jpeg"
+                class="w-8 h-8 rounded-full object-contain"
+                alt="AI"
+            >
+
+            <div class="max-w-[80%] rounded-2xl rounded-tl-sm px-3 py-2 bg-[var(--bg-card-hover)] text-sm text-[var(--text-primary)]">
+                ${data.response}
+            </div>
+        `;
+
+        messages.appendChild(aiBubble);
+
+        messages.scrollTop =
+            messages.scrollHeight;
+
+    } catch (error) {
+
+        console.error(
+            'Chatbot error:',
+            error
+        );
+
+        const errorBubble =
+            document.createElement('div');
+
+        errorBubble.className =
+            'text-xs text-red-400 px-2';
+
+        errorBubble.textContent =
+            'Sorry, I could not connect to the chatbot.';
+
+        messages.appendChild(errorBubble);
+    }
+}
+
+
