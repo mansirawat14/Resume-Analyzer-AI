@@ -2208,7 +2208,7 @@ def calculate_job_match(resume_data, job_description):
 
     if not job_description:
         return {
-            "match_percentage": None,
+            "match_percentage": 0,
             "matched_skills": [],
             "missing_skills": [],
             "required_skills": []
